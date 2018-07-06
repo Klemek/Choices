@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Choices</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- CSS -->
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
+          integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <link rel="stylesheet" href="fontawesome/css/all.css">
+    <link rel="stylesheet" href="css/main.css">
+
+    <!-- required scripts -->
+    <script
+            src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+            integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"
+            integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T"
+            crossorigin="anonymous"></script>
+    <script src="fontawesome/js/all.js"></script>
+    <script src="js/main.js"></script>
+</head>
+<body>
+
+<!-- Navigation bar -->
+
+<nav class="navbar navbar-expand-sm navbar-light bg-light mb-4">
+    <a class="navbar-brand" href="/"><i class="fas fa-dice"></i> Choices</a>
+    <ul class="navbar-nav ml-auto">
+        <li id="user" class="nav-item dropleft" style="display:none;">
+            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">
+                <img class="rounded-circle user-image-nav" src=""/>
+            </a>
+            <div class="dropdown-menu">
+                <div href="#" class="dropdown-item disabled">
+                    <img class="rounded-circle user-image-full" src=""/>
+                    &nbsp;
+                    <div>
+                        <span class="user-name"></span><br/>
+                        <span class="user-mail"></span><br/>
+                        <a href="/logout" class="btn btn-primary btn-sm btn-block">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </li>
+    </ul>
+</nav>
+
+<!-- Alerts -->
+
+<div class="container">
+    <div class="row my-auto">
+        <div id="alerts" class="col-lg-6 col-md-8 mx-auto">
+        </div>
+    </div>
+</div>
+
+<!-- Loading -->
+
+<div id="loading" class="container">
+    <div class="row my-auto">
+        <div class="col-lg-6 col-md-8 mx-auto">
+            <div class="jumbotron">
+                <h1 class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Menu View-->
+
+<div id="menu-view" style="display:none" class="container">
+    <div class="row my-auto">
+        <div class="col-lg-6 col-md-8 mx-auto">
+            <div class="jumbotron">
+                <h1 class="text-center"><i class="fas fa-dice"></i> Choices</h1>
+                <br/>
+                <div class="row">
+                    <div id="div-create-room" class="col-6 h-100">
+                        <button id="btn-create" class="btn btn-primary btn-block">Create room</button>
+                    </div>
+                    <div id="div-join-room" class="col-6">
+                        <input placeholder="Enter room ID" type="text" class="form-control"
+                               id="roomid">
+                        <button id="btn-join" class="btn btn-primary btn-block">Join room</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Room View -->
+
+<div id="room-view" style="display:none" class="container">
+    <div class="row my-auto">
+        <div class="col-md-8 mx-auto">
+            <div class="jumbotron text-center">
+                <h1 id="room-name">Room 12345</h1>
+                <h3 id="room-text"></h3>
+                <div id="answers" class="row">
+                    <div class="col-6 answer">
+                        <div id="answer-a" class="btn btn-danger btn-block btn-lg"></div>
+                    </div>
+                    <div class="col-6 answer">
+                        <div id="answer-b" class="btn btn-success btn-block btn-lg"></div>
+                    </div>
+                    <div class="col-6 answer">
+                        <div id="answer-c" class="btn btn-info btn-block btn-lg"></div>
+                    </div>
+                    <div class="col-6 answer">
+                        <div id="answer-d" class="btn btn-warning btn-block btn-lg"></div>
+                    </div>
+                </div>
+                <button id="btn-next" class="btn btn-info">Next text</button>
+                <button id="btn-refresh" class="btn btn-info">Refresh</button>
+                <button id="btn-auto-refresh" class="btn btn-info"><i class="far fa-square"></i> Auto-Refresh</button>
+                <button id="btn-delete" class="btn btn-danger">Quit</button>
+                <br/>
+                <br/>
+                <div id="members" class="row">
+                </div>
+            </div>
+        </div>
+        <br/>
+    </div>
+</div>
+
+<!-- Pad View -->
+
+<div id="pad-view" style="display:none" class="container">
+    <div class="row">
+        <div id="btn-a" class="col-6 pad-cell">
+            <div class="jumbotron bg-danger"><h1 class="text-white text-center">A</h1></div>
+        </div>
+        <div id="btn-b"  class="col-6 pad-cell">
+            <div class="jumbotron bg-success"><h1 class="text-white text-center">B</h1></div>
+        </div>
+        <div id="btn-c"  class="col-6 pad-cell">
+            <div class="jumbotron bg-info"><h1 class="text-white text-center">C</h1></div>
+        </div>
+        <div id="btn-d"  class="col-6 pad-cell">
+            <div class="jumbotron bg-warning"><h1 class="text-center">D</h1></div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

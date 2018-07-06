@@ -1,0 +1,55 @@
+body, html {
+    height: 100%;
+}
+
+/* navigation bar */
+
+#user > a {
+    padding: 0;
+}
+
+#user > .dropdown-menu > .dropdown-item > div {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.user-image-nav, .user-image-full {
+    background-color: grey;
+}
+
+.navbar-nav .dropdown-menu{
+    position:absolute;
+}
+
+/* menu view */
+
+#btn-create {
+    margin-top: 10%;
+}
+
+#roomid {
+    margin-bottom: 3%;
+}
+
+/* room view */
+
+.member-card {
+    padding: 1%;
+    margin: 0 0 5% 0;
+    cursor: pointer;
+}
+
+.member-card img {
+    margin-top: 7%;
+}
+
+.answer {
+    margin-bottom: 2%;
+    pointer-events: none;
+}
+
+/* pad view */
+
+.pad-cell {
+    cursor: pointer;
+}

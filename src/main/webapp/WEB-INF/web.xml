@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee" version="3.1">
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+    <context-param>
+        <param-name>auth.callback</param-name>
+        <param-value>${auth.callback}</param-value>
+    </context-param>
+    <context-param>
+        <param-name>auth.clientID</param-name>
+        <param-value>${auth.clientID}</param-value>
+    </context-param>
+    <context-param>
+        <param-name>auth.clientSecret</param-name>
+        <param-value>${auth.clientSecret}</param-value>
+    </context-param>
+
+    <servlet>
+        <servlet-name>default</servlet-name>
+        <servlet-class>org.eclipse.jetty.servlet.DefaultServlet</servlet-class>
+        <init-param>
+            <param-name>cacheControl</param-name>
+            <param-value>max-age=0,public</param-value>
+        </init-param>
+        <init-param>
+            <param-name>maxCachedFiles</param-name>
+            <param-value>0</param-value>
+        </init-param>
+        <init-param>
+            <param-name>useFileMappedBuffer</param-name>
+            <param-value>false</param-value>
+        </init-param>
+    </servlet>
+</web-app>
