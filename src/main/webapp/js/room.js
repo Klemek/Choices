@@ -149,7 +149,7 @@ var room = {
         }
 
         if(data.state === "ANSWERING" && total === data.users.length){
-            ['A', 'B', 'C', 'D'].forEach(function (ans, i) {
+            ['A', 'B', 'C', 'D'].forEach(function (ans) {
                 ui.updateAnswer(
                     ans,
                     true,
