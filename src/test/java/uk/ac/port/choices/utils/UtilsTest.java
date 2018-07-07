@@ -1,11 +1,8 @@
-package uk.ac.port.utils;
+package uk.ac.port.choices.utils;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import uk.ac.port.TestUtils;
-import uk.ac.port.utils.Logger;
-
-import java.io.File;
+import uk.ac.port.choices.TestUtils;
 
 import static org.junit.Assert.*;
 

@@ -1,11 +1,11 @@
-package uk.ac.port.oauth2;
+package uk.ac.port.choices.oauth2;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson.JacksonFactory;
-import uk.ac.port.utils.Logger;
+import uk.ac.port.choices.utils.Logger;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -16,7 +16,6 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.logging.Level;
 
 @WebServlet(name = "login", value = "/login")
 @SuppressWarnings("serial")

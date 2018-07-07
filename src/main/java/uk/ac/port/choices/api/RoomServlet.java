@@ -1,13 +1,13 @@
-package uk.ac.port.api;
+package uk.ac.port.choices.api;
 
 import fr.klemek.betterlists.BetterArrayList;
-import uk.ac.port.dao.RoomDao;
-import uk.ac.port.model.Question;
-import uk.ac.port.model.Room;
-import uk.ac.port.model.User;
-import uk.ac.port.utils.Logger;
-import uk.ac.port.utils.ServletUtils;
-import uk.ac.port.utils.Utils;
+import uk.ac.port.choices.dao.RoomDao;
+import uk.ac.port.choices.model.Question;
+import uk.ac.port.choices.model.Room;
+import uk.ac.port.choices.model.User;
+import uk.ac.port.choices.utils.Logger;
+import uk.ac.port.choices.utils.ServletUtils;
+import uk.ac.port.choices.utils.Utils;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -46,10 +46,10 @@ public class RoomServlet extends HttpServlet {
      */
     private static void createRoom(String userId, HttpServletResponse response) {
         List<Question> questionList = new ArrayList<>();
-        questionList.add(new Question("What is 1+1", new String[]{"1", "2", "3", "4"}, 2));
-        questionList.add(new Question("What is 2*2", new String[]{"1", "2", "3", "4"}, 4));
-        questionList.add(new Question("What is 1+2", new String[]{"1", "2", "3", "4"}, 3));
-        questionList.add(new Question("What is 2+2", new String[]{"1", "2", "3", "4"}, 4));
+        questionList.add(new Question("What is 1+1", new String[]{"2", "1", "3", "4"}));
+        questionList.add(new Question("What is 2*2", new String[]{"4", "2", "3", "1"}));
+        questionList.add(new Question("What is 1+2", new String[]{"3", "2", "1", "4"}));
+        questionList.add(new Question("What is 2+2", new String[]{"4", "2", "3", "1"}));
         Room room = new Room(questionList, userId);
         RoomServlet.dao.createRoom(room);
         if (room.getId() != null) {
@@ -76,6 +76,12 @@ public class RoomServlet extends HttpServlet {
         Room room = RoomServlet.getRoomFromRequest(request, response);
         if (room == null)
             return;
+
+        if(room.getState() == Room.State.CLOSED){
+            ServletUtils.sendError(response, HttpServletResponse.SC_FORBIDDEN, "Room is closed");
+            return;
+        }
+
         User u = RoomServlet.getUser(request);
         if(!room.getUsers().contains(u)){
             room.getUsers().add(RoomServlet.getUser(request));

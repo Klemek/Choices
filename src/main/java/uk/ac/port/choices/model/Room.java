@@ -1,11 +1,10 @@
-package uk.ac.port.model;
+package uk.ac.port.choices.model;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import uk.ac.port.utils.Utils;
+import uk.ac.port.choices.utils.Utils;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -112,22 +111,16 @@ public class Room {
         }
         output.put("users", usersArray);
         output.put("state", state.toString());
+        output.put("roundCount", questions.size());
 
-        switch (state) {
-            case RESULTS:
-                output.put("correctAnswer", questions.get(round).getCorrectAnswer());
-            case ANSWERING:
-                JSONArray answers = new JSONArray();
-                for (String answer : questions.get(round).getAnswers()) {
-                    answers.put(answer);
-                }
-                output.put("answers", answers);
-                output.put("question", questions.get(round).getText());
-                output.put("round", round);
-            case CLOSED:
-                output.put("roundCount", questions.size());
-            case REGISTERING:
-                break;
+        if(state == Room.State.ANSWERING || state == Room.State.RESULTS){
+            JSONArray answers = new JSONArray();
+            for (String answer : questions.get(round).getAnswers()) {
+                answers.put(answer);
+            }
+            output.put("answers", answers);
+            output.put("question", questions.get(round).getText());
+            output.put("round", round);
         }
 
         return output;

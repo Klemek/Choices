@@ -1,4 +1,4 @@
-package uk.ac.port.api;
+package uk.ac.port.choices.api;
 
 import org.json.JSONObject;
 import org.junit.After;
@@ -8,12 +8,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.modules.junit4.PowerMockRunner;
-import uk.ac.port.TestUtils;
-import uk.ac.port.dao.RoomDao;
-import uk.ac.port.model.Question;
-import uk.ac.port.model.Room;
-import uk.ac.port.model.User;
-import uk.ac.port.oauth2.Oauth2CallbackServlet;
+import uk.ac.port.choices.TestUtils;
+import uk.ac.port.choices.dao.RoomDao;
+import uk.ac.port.choices.model.Question;
+import uk.ac.port.choices.model.Room;
+import uk.ac.port.choices.model.User;
+import uk.ac.port.choices.oauth2.Oauth2CallbackServlet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -40,7 +40,7 @@ public class RoomServletTest {
     @Before
     public void setUp() {
         List<Question> questionList = new ArrayList<>();
-        questionList.add(new Question("What is 1+1", new String[]{"1", "2", "3", "4"}, 2));
+        questionList.add(new Question("What is 1+1", new String[]{"2", "1", "3", "4"}));
         room = new Room(questionList, "masterid");
         RoomServletTest.dao.createRoom(room);
     }
@@ -181,6 +181,30 @@ public class RoomServletTest {
         room = RoomServletTest.dao.getRoomBySimpleId(room.getSimpleId());
         assertEquals(1, room.getUsers().size());
         assertEquals(userid, room.getUsers().get(0).getId());
+    }
+
+    @Test
+    public void testJoinRoomClosed() {
+
+        room.next(); //answering
+        room.next(); //results
+        room.next(); //closed
+        assertEquals(Room.State.CLOSED, room.getState());
+        RoomServletTest.dao.updateRoom(room);
+
+        String userid = "userid";
+
+        Map<String, Object> session = new HashMap<>();
+        session.put(Oauth2CallbackServlet.SESSION_USER_ID, userid);
+
+        StringWriter writer = new StringWriter();
+        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/" + room.getSimpleId() + "/join", null, null, session);
+        HttpServletResponse response = TestUtils.createMockResponse(writer);
+
+        new RoomServlet().service(request, response);
+
+        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        assertEquals(403, res.getInt("code"));
     }
 
     @Test

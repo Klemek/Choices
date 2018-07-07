@@ -1,12 +1,12 @@
-package uk.ac.port;
+package uk.ac.port.choices;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-import uk.ac.port.api.RoomServletTest;
-import uk.ac.port.api.SessionServletTest;
-import uk.ac.port.dao.RoomDaoTest;
-import uk.ac.port.utils.ServletUtilsTest;
-import uk.ac.port.utils.UtilsTest;
+import uk.ac.port.choices.api.RoomServletTest;
+import uk.ac.port.choices.api.SessionServletTest;
+import uk.ac.port.choices.dao.RoomDaoTest;
+import uk.ac.port.choices.utils.ServletUtilsTest;
+import uk.ac.port.choices.utils.UtilsTest;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({

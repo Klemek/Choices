@@ -1,13 +1,13 @@
-package uk.ac.port.dao;
+package uk.ac.port.choices.dao;
 
 import com.google.cloud.datastore.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import uk.ac.port.model.Question;
-import uk.ac.port.model.Room;
-import uk.ac.port.model.User;
-import uk.ac.port.utils.Logger;
+import uk.ac.port.choices.model.Question;
+import uk.ac.port.choices.model.Room;
+import uk.ac.port.choices.model.User;
+import uk.ac.port.choices.utils.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +39,6 @@ public class RoomDao {
 
     static final String TEXT = "text";
     static final String ANSWERS = "answers";
-    static final String CORRECTANSWER = "correctAnswer";
 
     //endregion
 
@@ -167,7 +166,6 @@ public class RoomDao {
     static StringValue questionToJson(Question question) {
         JSONObject json = new JSONObject();
         json.put(RoomDao.TEXT, question.getText());
-        json.put(RoomDao.CORRECTANSWER, question.getCorrectAnswer());
         json.put(RoomDao.ANSWERS, new JSONArray());
         for (int i = 0; i < question.getAnswers().length; i++)
             json.getJSONArray(RoomDao.ANSWERS).put(question.getAnswers()[i]);
@@ -181,8 +179,7 @@ public class RoomDao {
             String[] answers = new String[4];
             for (int i = 0; i < answers.length; i++)
                 answers[i] = json.getJSONArray(RoomDao.ANSWERS).getString(i);
-            int correctAnswer = json.getInt(RoomDao.CORRECTANSWER);
-            return new Question(text, answers, correctAnswer);
+            return new Question(text, answers);
         } catch (JSONException e) {
             Logger.log(e);
             return null;

@@ -1,9 +1,9 @@
-package uk.ac.port.api;
+package uk.ac.port.choices.api;
 
 import org.json.JSONObject;
-import uk.ac.port.oauth2.Oauth2CallbackServlet;
-import uk.ac.port.utils.Logger;
-import uk.ac.port.utils.ServletUtils;
+import uk.ac.port.choices.oauth2.Oauth2CallbackServlet;
+import uk.ac.port.choices.utils.Logger;
+import uk.ac.port.choices.utils.ServletUtils;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;

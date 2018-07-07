@@ -4,7 +4,7 @@
     <version>1.0</version>
 
     <groupId>uk.ac.port</groupId>
-    <artifactId>java-tutorial</artifactId>
+    <artifactId>choices</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
 
     <properties>
@@ -134,6 +134,7 @@
                 <version>3.1.0</version>
                 <configuration>
                     <archiveClasses>true</archiveClasses>
+                    <warSourceExcludes>.idea/**</warSourceExcludes>
                     <webResources>
                         <resource>
                             <directory>${basedir}/src/main/webapp/WEB-INF</directory>
@@ -165,7 +166,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.21.0</version>
                 <configuration>
-                    <test>uk.ac.port.AllTests</test>
+                    <test>uk.ac.port.choices.AllTests</test>
                 </configuration>
             </plugin>
             <plugin>

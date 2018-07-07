@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.ac.port.oauth2;
+package uk.ac.port.choices.oauth2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.auth.oauth2.Credential;
@@ -27,17 +27,14 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson.JacksonFactory;
-import uk.ac.port.utils.Logger;
+import uk.ac.port.choices.utils.Logger;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.logging.Level;
+import java.util.*;
 
 @WebServlet(name = "oauth2callback", value = "/oauth2callback")
 @SuppressWarnings("serial")
@@ -53,11 +50,11 @@ public class Oauth2CallbackServlet extends HttpServlet {
     public static final String SESSION_USER_IMAGE_URL = "userImageUrl";
     public static final String SESSION_USER_NAME = "userName";
     static final String SESSION_TOKEN = "token";
-    public static final String[] SESSION_USER = {
+    public static final List<String> SESSION_USER = Collections.unmodifiableList(Arrays.asList(
             Oauth2CallbackServlet.SESSION_USER_EMAIL,
             Oauth2CallbackServlet.SESSION_USER_ID,
             Oauth2CallbackServlet.SESSION_USER_IMAGE_URL,
-            Oauth2CallbackServlet.SESSION_USER_NAME};
+            Oauth2CallbackServlet.SESSION_USER_NAME));
 
 
     @Override

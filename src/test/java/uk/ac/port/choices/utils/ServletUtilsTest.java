@@ -1,11 +1,11 @@
-package uk.ac.port.utils;
+package uk.ac.port.choices.utils;
 
 import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.modules.junit4.PowerMockRunner;
-import uk.ac.port.TestUtils;
+import uk.ac.port.choices.TestUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

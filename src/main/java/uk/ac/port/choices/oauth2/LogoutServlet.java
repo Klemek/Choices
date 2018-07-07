@@ -1,8 +1,8 @@
-package uk.ac.port.oauth2;
+package uk.ac.port.choices.oauth2;
 
 import com.google.api.client.http.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import uk.ac.port.utils.Logger;
+import uk.ac.port.choices.utils.Logger;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;

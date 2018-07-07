@@ -1,18 +1,15 @@
-package uk.ac.port.api;
+package uk.ac.port.choices.api;
 
 import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import uk.ac.port.TestUtils;
-import uk.ac.port.oauth2.Oauth2CallbackServlet;
+import uk.ac.port.choices.TestUtils;
+import uk.ac.port.choices.oauth2.Oauth2CallbackServlet;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package uk.ac.port.model;
+package uk.ac.port.choices.model;
 
 import org.json.JSONObject;
 
