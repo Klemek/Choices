@@ -27,6 +27,29 @@ public final class Utils {
      * Generate a random string with numbers, uppercase and lowercase letters.
      *
      * @param length the length of the string
+     * @param avoided every substring or char to avoid
+     * @return the generated string
+     */
+    public static String getRandomString(int length, String...avoided) {
+        boolean correct;
+        String generated;
+        do{
+            generated = Utils.getRandomString(length);
+            correct = true;
+            for(String avoidedUnit:avoided){
+                if(generated.contains(avoidedUnit)){
+                    correct = false;
+                    break;
+                }
+            }
+        }while(!correct);
+        return generated;
+    }
+
+    /**
+     * Generate a random string with numbers, uppercase and lowercase letters.
+     *
+     * @param length the length of the string
      * @return the generated string
      */
     public static String getRandomString(int length) {

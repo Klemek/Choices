@@ -26,7 +26,7 @@ public class Room {
     private final List<User> users;
 
     public Room(List<Question> questions, String masterId) {
-        this(null, Utils.getRandomString(6), questions, 0, masterId, Room.State.REGISTERING, new ArrayList<>());
+        this(null, Utils.getRandomString(6,"I","l","O","0"), questions, 0, masterId, Room.State.REGISTERING, new ArrayList<>());
     }
 
     public Room(Long id, String simpleId, List<Question> questions, int round, String masterId, Room.State state, List<User> users) {
@@ -80,11 +80,11 @@ public class Room {
                 state = Room.State.RESULTS;
                 break;
             case RESULTS:
+                for (User u : users)
+                    u.setAnswer(0);
                 if (round + 1 < questions.size()) {
                     round++;
                     state = Room.State.ANSWERING;
-                    for (User u : users)
-                        u.setAnswer(0);
                 } else {
                     state = Room.State.CLOSED;
                 }

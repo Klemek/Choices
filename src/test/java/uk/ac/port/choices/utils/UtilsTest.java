@@ -59,4 +59,17 @@ public class UtilsTest {
         assertTrue(Utils.isAlphaNumeric("1B2a3Z4 5bc", ' '));
         assertTrue(Utils.isAlphaNumeric(" -;!:,%", ' ', '-', ';', '!', ':', ',', '%'));
     }
+
+    @Test
+    public void testGetRandomStringAvoided(){
+        String generated;
+        for(int i = 0; i < 100; i++){
+            generated = Utils.getRandomString(6,"I","l","O","0");
+            assertFalse(generated.contains("I"));
+            assertFalse(generated.contains("l"));
+            assertFalse(generated.contains("O"));
+            assertFalse(generated.contains("0"));
+        }
+
+    }
 }

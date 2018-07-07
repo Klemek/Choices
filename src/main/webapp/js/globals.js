@@ -20,8 +20,8 @@ var ajax = {
             console.log(o.method + " request to " + o.url);
 
         function cbwrap(data) {
-            if (debug){
-                console.log("Received response from "+o.method + " request to " + o.url+" :");
+            if (debug) {
+                console.log("Received response from " + o.method + " request to " + o.url + " :");
                 console.log(data);
             }
 
@@ -61,4 +61,29 @@ Math.shuffle = function (a) {
         a[j] = x;
     }
     return a;
+};
+
+var mapping = {
+    answerToColor: {
+        0: 'secondary',
+        1: 'danger',
+        2: 'success',
+        3: 'info',
+        4: 'warning'
+    },
+    letterToAnswer: {
+        A: 1,
+        B: 2,
+        C: 3,
+        D: 4
+    },
+    letterToColor: function(letter){
+        return this.answerToColor[this.letterToAnswer[letter]];
+    },
+    answerToLetter:{
+        1: 'A',
+        2: 'B',
+        3: 'C',
+        4: 'D'
+    }
 };
