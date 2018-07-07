@@ -48,7 +48,7 @@ public final class TestUtils {
         }
         try {
             doReturn(new ServletInputStream() {
-                ByteArrayInputStream stream = new ByteArrayInputStream(data.toString().getBytes());
+                private final ByteArrayInputStream stream = new ByteArrayInputStream(data.toString().getBytes());
 
                 @Override
                 public boolean isFinished() {
@@ -65,7 +65,7 @@ public final class TestUtils {
                 }
 
                 @Override
-                public int read() throws IOException {
+                public int read() {
                     return stream.read();
                 }
             }).when(request).getInputStream();
@@ -85,7 +85,7 @@ public final class TestUtils {
         HttpServletResponse response = mock(HttpServletResponse.class);
         try {
             when(response.getWriter()).thenReturn(new PrintWriter(stringWriter));
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         }
         return response;
     }

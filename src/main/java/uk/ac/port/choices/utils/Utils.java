@@ -74,7 +74,7 @@ public final class Utils {
      * @return a list of jsonObject
      */
     public static List<JSONObject> jArrayToJObjectList(JSONArray src) {
-        ArrayList<JSONObject> lst = new ArrayList<>(src.length());
+        List<JSONObject> lst = new ArrayList<>(src.length());
         for (int i = 0; i < src.length(); i++)
             lst.add(src.getJSONObject(i));
         return lst;

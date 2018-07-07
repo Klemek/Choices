@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,11 +21,9 @@ import java.util.logging.Level;
  */
 public final class ServletUtils {
 
-    public static final String VALUE_KEY = "value";
+    private static final String VALUE_KEY = "value";
 
-    private static boolean bruteForceSecurity = true;
-
-    private static HashMap<Long, String> currentRequests = new HashMap<>();
+    private static final Map<Long, String> currentRequests = new HashMap<>();
 
     private ServletUtils() {
     }
@@ -61,20 +60,19 @@ public final class ServletUtils {
      */
     private static void sendContent(HttpServletResponse response, int code, JSONObject result) {
         response.setStatus(code);
-        if (!result.has(VALUE_KEY)) {
+        if (!result.has(ServletUtils.VALUE_KEY)) {
             JSONObject temp = result;
             result = new JSONObject();
-            result.put(VALUE_KEY, temp);
+            result.put(ServletUtils.VALUE_KEY, temp);
         }
         result.put("code", code);
         response.setHeader("Content-Type", "application/json");
-        try {
-            response.getWriter().print(result.toString());
+        try (PrintWriter writer = response.getWriter()) {
+            writer.print(result);
             response.flushBuffer();
         } catch (IOException e) {
             Logger.log(Level.SEVERE, e.toString(), e);
         }
-
     }
 
     /**
@@ -85,7 +83,7 @@ public final class ServletUtils {
      */
 
     public static void sendError(HttpServletResponse response, int code) {
-        sendError(response, code, null);
+        ServletUtils.sendError(response, code, null);
     }
 
     /**
@@ -101,12 +99,12 @@ public final class ServletUtils {
         int stackTraceLevel = 3;
         do {
             source = Utils.getCallingClassName(stackTraceLevel++);
-        } while (source != null && source.equals(className));
+        } while (className.equals(source));
         if (code != HttpServletResponse.SC_UNAUTHORIZED)
-            Logger.log(source, Level.WARNING, "Error {0} sent : {1} (request : {2})", code, message == null ? "" : ": " + message, getCurrentRequest());
+            Logger.log(source, Level.WARNING, "Error {0} sent : {1} (request : {2})", code, message == null ? "" : ": " + message, ServletUtils.getCurrentRequest());
         JSONObject error = new JSONObject();
-        error.put("error", message == null ? getError(code) : message);
-        sendContent(response, code, error);
+        error.put("error", message == null ? ServletUtils.getError(code) : message);
+        ServletUtils.sendContent(response, code, error);
     }
 
     /**
@@ -116,13 +114,13 @@ public final class ServletUtils {
      * @param result   the json object to send
      */
     public static void sendJSONResponse(HttpServletResponse response, JSONObject result) {
-        sendContent(response, HttpServletResponse.SC_OK, result);
+        ServletUtils.sendContent(response, HttpServletResponse.SC_OK, result);
     }
 
     public static void sendOK(HttpServletResponse response) {
         JSONObject json = new JSONObject();
         json.put("success", true);
-        sendJSONResponse(response, json);
+        ServletUtils.sendJSONResponse(response, json);
     }
 
     /**
@@ -134,8 +132,8 @@ public final class ServletUtils {
      */
     public static void sendJSONResponse(HttpServletResponse response, JSONArray jsonArray) {
         JSONObject result = new JSONObject();
-        result.put(VALUE_KEY, jsonArray);
-        sendContent(response, HttpServletResponse.SC_OK, result);
+        result.put(ServletUtils.VALUE_KEY, jsonArray);
+        ServletUtils.sendContent(response, HttpServletResponse.SC_OK, result);
     }
 
     /**
@@ -149,8 +147,8 @@ public final class ServletUtils {
     public static boolean handleCrossOrigin(HttpServletRequest request, HttpServletResponse response) {
         response.setHeader("Access-Control-Allow-Origin", "*");
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        if (request.getMethod().equals("OPTIONS")) {
-            sendOK(response);
+        if ("OPTIONS".equals(request.getMethod())) {
+            ServletUtils.sendOK(response);
             return true;
         } else {
             return false;
@@ -174,12 +172,12 @@ public final class ServletUtils {
         boolean matchingWrongMethod = false;
         boolean matchingDone = false;
 
-        currentRequests.put(Thread.currentThread().getId(), requestToJSON(request).toString());
+        ServletUtils.currentRequests.put(Thread.currentThread().getId(), ServletUtils.requestToJSON(request).toString());
 		for (Map.Entry<String, Runnable> entry : map.entrySet()) {
 			String[] mapping = entry.getKey().split(" ");
             if (mapping.length != 2)
                 throw new IllegalArgumentException(String.format("Wrongly mapped URI : '%s'", entry.getKey()));
-            if (matchingURI(mapping[1], request.getRequestURI(), 2)) {
+            if (ServletUtils.matchingURI(mapping[1], request.getRequestURI(), 2)) {
                 if (request.getMethod().equalsIgnoreCase(mapping[0])) {
                     entry.getValue().run();
                     matchingDone = true;
@@ -202,7 +200,7 @@ public final class ServletUtils {
         Map<String, String> out = new HashMap<>();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()))) {
             String data = br.readLine();
-            if (data != null && data.length() > 0)
+            if (data != null && !data.isEmpty())
                 for (String parameter : data.split("&")) {
                     String[] spl = parameter.split("=", 2);
                     if (spl.length == 2)
@@ -228,8 +226,8 @@ public final class ServletUtils {
         return json;
     }
 
-    static String getCurrentRequest() {
-        return currentRequests.get(Thread.currentThread().getId());
+    private static String getCurrentRequest() {
+        return ServletUtils.currentRequests.get(Thread.currentThread().getId());
     }
 
 	/**
@@ -252,19 +250,5 @@ public final class ServletUtils {
             if (!refPath[i].startsWith("{") && !srcPath[i].equals(refPath[i]))
                 return false;
         return true;
-    }
-
-    /**
-     * Delay request to avoid brute force.
-     */
-    public static void bruteForceSecurity() {
-        if (bruteForceSecurity) {
-            //Delay login to avoid brute force
-            try {
-                Thread.sleep(300);
-            } catch (Exception e) {
-                Logger.log(Level.WARNING, "Cannot delay login");
-            }
-        }
     }
 }

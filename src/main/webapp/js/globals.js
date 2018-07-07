@@ -16,14 +16,9 @@ var ajax = {
             o.data = data;
         }
 
-        if (debug)
-            console.log(o.method + " request to " + o.url);
-
         function cbwrap(data) {
-            if (debug) {
-                console.log("Received response from " + o.method + " request to " + o.url + " :");
-                console.log(data);
-            }
+            if (debug)
+                console.log("Received response from " + o.method + " request to " + o.url + " : ",data);
 
             data = data.value ? data.value : data;
             if (callback)
@@ -34,8 +29,7 @@ var ajax = {
             if (data.status === 401)
                 window.location.href = "/login?redirect=" + encodeURI(window.location.href);
 
-            console.error("Error in " + o.method + " request to " + o.url + " (status : " + data.status + ") :");
-            console.error(data);
+            console.error("Error in " + o.method + " request to " + o.url + " (status : " + data.status + ") : ",data);
 
             if (onerror)
                 onerror(data);

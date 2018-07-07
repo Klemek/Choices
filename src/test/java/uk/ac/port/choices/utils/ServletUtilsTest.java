@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.StringWriter;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -30,7 +31,7 @@ public class ServletUtilsTest {
         HttpServletRequest request = TestUtils.createMockRequest("DELETE", "/api/test/bla", null, null, null);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
 
-        LinkedHashMap<String, Runnable> map = new LinkedHashMap<>();
+        Map<String, Runnable> map = new LinkedHashMap<>();
         map.put("PUT /api/test/{}", () -> {
             fail("Invalid mapping");
         });
@@ -41,7 +42,7 @@ public class ServletUtilsTest {
         try {
             ServletUtils.mapRequest(request, response, map);
             fail("Invalid mapping");
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException ignored) {
         }
     }
 
@@ -51,7 +52,7 @@ public class ServletUtilsTest {
         HttpServletRequest request = TestUtils.createMockRequest("GET", "/api/vm/templates", null, null, null);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
 
-        LinkedHashMap<String, Runnable> map = new LinkedHashMap<>();
+        Map<String, Runnable> map = new LinkedHashMap<>();
         map.put("GET /api/vm/templates", () -> {
             Integer.parseInt("a");
         });
@@ -62,7 +63,7 @@ public class ServletUtilsTest {
         try {
             ServletUtils.mapRequest(request, response, map);
             fail("Invalid mapping");
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException ignored) {
         }
     }
 
@@ -72,7 +73,7 @@ public class ServletUtilsTest {
         HttpServletRequest request = TestUtils.createMockRequest("GET", "/api/test/bla", null, null, null);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
 
-        LinkedHashMap<String, Runnable> map = new LinkedHashMap<>();
+        Map<String, Runnable> map = new LinkedHashMap<>();
         map.put("PUT /api/test/{}", () -> {
             fail("Invalid mapping");
         });
@@ -95,7 +96,7 @@ public class ServletUtilsTest {
         HttpServletRequest request = TestUtils.createMockRequest("GET", "/api/test/test2", null, null, null);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
 
-        LinkedHashMap<String, Runnable> map = new LinkedHashMap<>();
+        Map<String, Runnable> map = new LinkedHashMap<>();
         map.put("GET /api/test/test", () -> {
             fail("Invalid mapping");
         });

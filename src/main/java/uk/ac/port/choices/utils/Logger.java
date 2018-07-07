@@ -23,15 +23,8 @@ public final class Logger {
      *
      * @param newLevel the level of log to show
      */
-    public static void setLevel(Level newLevel) {
-        appLogger.setLevel(newLevel);
-    }
-
-    /**
-     * @return the current logger level;
-     */
-    public static Level getLevel() {
-        return appLogger.getLevel();
+    private static void setLevel(Level newLevel) {
+        Logger.appLogger.setLevel(newLevel);
     }
 
     /**
@@ -40,7 +33,7 @@ public final class Logger {
      * @param relativePath the path in resources of the config file
      */
     public static void init(String relativePath) {
-        init(relativePath, Level.INFO);
+        Logger.init(relativePath, Level.INFO);
     }
 
     /**
@@ -51,7 +44,7 @@ public final class Logger {
      */
     public static void init(String relativePath, Level level) {
         Locale.setDefault(Locale.ENGLISH);
-        loadConfigFromFile(relativePath);
+        Logger.loadConfigFromFile(relativePath);
         Logger.setLevel(level);
     }
 
@@ -68,7 +61,7 @@ public final class Logger {
                 return;
             }
             LogManager.getLogManager().readConfiguration(is);
-            appLogger = java.util.logging.Logger.getLogger("VSquare");
+            Logger.appLogger = java.util.logging.Logger.getLogger("VSquare");
         } catch (IOException e) {
             Logger.log(Level.SEVERE, e.toString(), e);
         }
@@ -86,10 +79,10 @@ public final class Logger {
     }
 
     public static void log(Exception e){
-        Logger.log(Level.SEVERE, e.toString(), e);
+        Logger.log(Level.SEVERE, e);
     }
 
-    public static void log(Level lvl, Exception e){
+    private static void log(Level lvl, Exception e) {
         Logger.log(lvl, e.toString(), e);
     }
 
@@ -103,15 +96,11 @@ public final class Logger {
      */
     public static void log(String source, Level lvl, String message, Object... objects) {
         message = String.format("[VSquare-%s] %s", source, message);
-        appLogger.log(lvl, message, objects);
+        Logger.appLogger.log(lvl, message, objects);
         if (lvl == Level.SEVERE && objects.length > 0 && objects[0] instanceof Exception) {
             Exception e = (Exception) objects[0];
-            StringBuilder stackTrace = new StringBuilder(message);
-            for (StackTraceElement ste : e.getStackTrace()) {
-                stackTrace.append('\n');
-                stackTrace.append(ste);
+            for (StackTraceElement ste : e.getStackTrace())
                 Logger.log(source, Level.SEVERE, "\t {0}", ste);
-            }
         }
     }
 }

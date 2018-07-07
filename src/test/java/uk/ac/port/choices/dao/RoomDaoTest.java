@@ -159,13 +159,13 @@ public class RoomDaoTest {
         users.add(new User("id", "name", "imageUrl", 4));
         Room room = new Room(0L, "ABCDE", questionList, 5, "abcde", Room.State.ANSWERING, users);
 
-        Long id = dao.createRoom(room);
+        Long id = RoomDaoTest.dao.createRoom(room);
 
         assertNotNull(id);
         assertEquals(id, room.getId());
         assertNotEquals(0L, (long)room.getId());
 
-        dao.deleteRoom(room);
+        RoomDaoTest.dao.deleteRoom(room);
     }
 
     @Test
@@ -175,15 +175,15 @@ public class RoomDaoTest {
         List<User> users = new ArrayList<>();
         users.add(new User("id", "name", "imageUrl", 4));
         Room room = new Room(0L, Utils.getRandomString(6), questionList, 5, "abcde", Room.State.ANSWERING, users);
-        assertNotNull(dao.createRoom(room));
+        assertNotNull(RoomDaoTest.dao.createRoom(room));
 
-        Room room2 = dao.getRoomBySimpleId(room.getSimpleId());
+        Room room2 = RoomDaoTest.dao.getRoomBySimpleId(room.getSimpleId());
         assertEquals(room, room2);
 
-        Room room3 = dao.getRoomBySimpleId("qumzfbqmzifgbqpbz");
+        Room room3 = RoomDaoTest.dao.getRoomBySimpleId("qumzfbqmzifgbqpbz");
         assertNull(room3);
 
-        dao.deleteRoom(room);
+        RoomDaoTest.dao.deleteRoom(room);
     }
 
     @Test
@@ -193,19 +193,19 @@ public class RoomDaoTest {
         List<User> users = new ArrayList<>();
         users.add(new User("id", "name", "imageUrl", 4));
         Room room = new Room(0L, Utils.getRandomString(6), questionList, 5, "abcde", Room.State.ANSWERING, users);
-        assertNotNull(dao.createRoom(room));
+        assertNotNull(RoomDaoTest.dao.createRoom(room));
 
-        Room room2 = dao.getRoomBySimpleId(room.getSimpleId());
+        Room room2 = RoomDaoTest.dao.getRoomBySimpleId(room.getSimpleId());
         assertEquals(room, room2);
 
         room2.getUsers().add(new User("id2", "name", "imageUrl", 4));
-        dao.updateRoom(room2);
+        RoomDaoTest.dao.updateRoom(room2);
 
-        Room room3 = dao.getRoomBySimpleId(room.getSimpleId());
+        Room room3 = RoomDaoTest.dao.getRoomBySimpleId(room.getSimpleId());
         assertEquals(room2, room3);
         assertEquals(2, room3.getUsers().size());
 
-        dao.deleteRoom(room);
+        RoomDaoTest.dao.deleteRoom(room);
 
     }
 
@@ -216,14 +216,14 @@ public class RoomDaoTest {
         List<User> users = new ArrayList<>();
         users.add(new User("id", "name", "imageUrl", 4));
         Room room = new Room(0L, Utils.getRandomString(6), questionList, 5, "abcde", Room.State.ANSWERING, users);
-        assertNotNull(dao.createRoom(room));
+        assertNotNull(RoomDaoTest.dao.createRoom(room));
 
-        Room room2 = dao.getRoomBySimpleId(room.getSimpleId());
+        Room room2 = RoomDaoTest.dao.getRoomBySimpleId(room.getSimpleId());
         assertEquals(room, room2);
 
-        dao.deleteRoom(room);
+        RoomDaoTest.dao.deleteRoom(room);
 
-        Room room3 = dao.getRoomBySimpleId(room.getSimpleId());
+        Room room3 = RoomDaoTest.dao.getRoomBySimpleId(room.getSimpleId());
         assertNull(room3);
     }
 }

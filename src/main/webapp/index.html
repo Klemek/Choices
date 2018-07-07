@@ -38,7 +38,7 @@
 <!-- Navigation bar -->
 
 <nav class="navbar navbar-expand-sm navbar-light bg-light mb-4">
-    <a class="navbar-brand" href="/"><i class="fas fa-dice"></i> Choices</a>
+    <a class="navbar-brand" href="/"><i class="fas fa-dice"></i>&nbsp;Choices</a>
     <ul class="navbar-nav ml-auto">
         <li id="user" class="nav-item dropleft" style="display:none;">
             <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">
@@ -50,7 +50,7 @@
                     <div>
                         <span class="user-name"></span><br/>
                         <span class="user-mail"></span><br/>
-                        <a href="/logout" class="btn btn-primary btn-sm btn-block">Logout</a>
+                        <span id="btn-logout" class="btn btn-primary btn-sm btn-block">Logout</span>
                     </div>
                 </div>
             </div>
@@ -73,7 +73,7 @@
     <div class="row my-auto">
         <div class="col-lg-6 col-md-8 mx-auto">
             <div class="jumbotron">
-                <h1 class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading</h1>
+                <h1 class="text-center"><i class="fas fa-spinner fa-spin"></i>&nbsp;Loading</h1>
             </div>
         </div>
     </div>
@@ -85,16 +85,46 @@
     <div class="row my-auto">
         <div class="col-lg-6 col-md-8 mx-auto">
             <div class="jumbotron">
-                <h1 class="text-center"><i class="fas fa-dice"></i> Choices</h1>
+                <h1 class="text-center"><i class="fas fa-dice"></i>&nbsp;Choices</h1>
                 <br/>
                 <div class="row">
                     <div id="div-create-room" class="col-6 h-100">
-                        <button id="btn-create" class="btn btn-primary btn-block">Create room</button>
+                        <button id="btn-new" class="btn btn-primary btn-block">Create room</button>
                     </div>
                     <div id="div-join-room" class="col-6">
                         <input placeholder="Enter room ID" type="text" class="form-control"
                                id="roomid">
                         <button id="btn-join" class="btn btn-primary btn-block">Join room</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create View -->
+
+<div id="create-view" style="display:none" class="container">
+    <div class="row my-auto">
+        <div class="col-lg-6 col-md-8 mx-auto">
+            <div class="jumbotron">
+                <h1 class="text-center"><i class="fas fa-plus-circle"></i>&nbsp;Create room</h1>
+                <br/>
+                <div class="form-group">
+                    <label for="question-pack"><h4><i class="fas fa-list"></i>&nbsp;Question pack</h4></label>
+                    <select class="form-control" id="question-pack">
+                        <option>Test question pack</option>
+                    </select>
+                </div>
+                <div id="form-create-checkboxes">
+                </div>
+                <br/>
+                <div class="row">
+                    <div class="col-8">
+                        <button id="btn-create" class="btn btn-primary btn-block">Create</button>
+                    </div>
+                    <div class="col-4">
+                        <button id="btn-cancel" class="btn btn-danger btn-block">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -126,7 +156,8 @@
                 </div>
                 <button id="btn-next" class="btn btn-info">Next text</button>
                 <button id="btn-refresh" class="btn btn-info">Refresh</button>
-                <button id="btn-auto-refresh" class="btn btn-info"><i class="far fa-square"></i> Auto-Refresh</button>
+                <button id="btn-auto-refresh" class="btn btn-info"><i class="far fa-square"></i>&nbsp;Auto-Refresh
+                </button>
                 <button id="btn-delete" class="btn btn-danger">Quit</button>
                 <br/>
                 <br/>

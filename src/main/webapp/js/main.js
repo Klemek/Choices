@@ -22,7 +22,4 @@ ajax.call('GET', '/session', function (data) {
     window.location.href = "/login?redirect=" + encodeURI(window.location.href);
 });
 
-$(document).ready(function () {
-    ui.changeMobile();
-    ui.registerEvents();
-});
+$(document).ready(ui.initUI);

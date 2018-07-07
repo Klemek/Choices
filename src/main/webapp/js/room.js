@@ -4,9 +4,14 @@ var room = {
     currentState: undefined,
     currentMembers: undefined,
     answers: undefined,
+    showAnswers: undefined,
+    showStats: undefined,
+    stats: undefined,
 
     set: function (tmproomid, master, pushstate) {
         this.id = tmproomid;
+
+        this.stats = [];
 
         if (pushstate) {
             window.history.pushState(null, "Room " + this.id, window.location.pathname + "?roomid=" + this.id);
@@ -64,14 +69,24 @@ var room = {
         if (data.state !== this.currentState) {
             switch (data.state) {
                 case "REGISTERING":
-                    ui.updateRoomView(this.id,
-                        '<i class="fas fa-spinner fa-spin"></i> Waiting for members...',
+                    ui.updateRoomView(
+                        this.id,
+                        ui.getRoomText(
+                            data.state,
+                            data.roundCount
+                        ),
                         'Start questions'
                     );
                     break;
                 case "ANSWERING":
-                    ui.updateRoomView(this.id,
-                        '<small><i class="fas fa-question-circle"></i> Question ' + (data.round + 1) + '/' + data.roundCount + ' :</small><br/>' + data.question,
+                    ui.updateRoomView(
+                        this.id,
+                        ui.getRoomText(
+                            data.state,
+                            data.roundCount,
+                            data.round,
+                            data.question
+                        ),
                         'See results',
                         true
                     );
@@ -86,8 +101,27 @@ var room = {
                     });
                     break;
                 case "RESULTS":
-                    ui.updateRoomView(this.id,
-                        '<small><i class="fas fa-info-circle"></i> Question ' + (data.round + 1) + '/' + data.roundCount + ' :</small><br/>' + data.question,
+                    var correct = room.answers.indexOf(0) + 1,
+                        total = 0,
+                        answered = {1: 0, 2: 0, 3: 0, 4: 0};
+
+                    data.users.forEach(function (member) {
+                        if (member.answer > 0) {
+                            total++;
+                            answered[member.answer]++;
+                        }
+                    });
+
+                    this.stats.push([answered[correct], total]);
+
+                    ui.updateRoomView(
+                        this.id,
+                        ui.getRoomText(
+                            data.state,
+                            data.roundCount,
+                            data.round,
+                            data.question
+                        ),
                         data.round + 1 === data.roundCount ? 'Finish' : 'Next question',
                         true
                     );
@@ -95,13 +129,20 @@ var room = {
                     ['A', 'B', 'C', 'D'].forEach(function (ans, i) {
                         ui.updateAnswer(
                             ans,
-                            i === room.answers.indexOf(0)
+                            i === correct - 1,
+                            data.answers[room.answers[mapping.letterToAnswer[ans] - 1]],
+                            room.showStats ? answered[mapping.letterToAnswer[ans]] : undefined,
+                            room.showStats ? total : undefined
                         );
                     });
                     break;
                 case "CLOSED":
-                    ui.updateRoomView(this.id,
-                        'Finished !'
+                    ui.updateRoomView(
+                        this.id,
+                        ui.getRoomText(
+                            data.state,
+                            data.roundCount
+                        )
                     );
                     break;
             }
@@ -109,7 +150,7 @@ var room = {
 
         if (data.users.toString() !== this.currentMembers) {
             data.users.forEach(function (member) {
-                if (data.state === "RESULTS")
+                if (data.state === "RESULTS" && this.showAnswers)
                     ui.setMemberBg(member.id, mapping.answerToColor[member.answer]);
                 else
                     ui.setMemberBg(member.id, member.answer === 0 ? 'secondary' : 'dark');
@@ -120,13 +161,15 @@ var room = {
         this.currentMembers = JSON.stringify(data.users);
     },
     //button events
-    create: function () {
+    create: function (packIndex, showAnswers, showStats, lockRoom) {
         ui.loading();
-        ajax.call('PUT', '/room/create', function (data) {
+        ajax.call('PUT', '/room/create?pack=' + packIndex + (lockRoom ? '&lock' : ''), function (data) {
             ui.showView('room');
             room.set(data.id, true, true);
             room.refresh(data);
             room.changeAutoRefresh();
+            room.showAnswers = showAnswers;
+            room.showStats = showStats;
         }, function () {
             ui.showView('menu');
             ui.addAlert("danger", "Cannot create room");

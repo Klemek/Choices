@@ -9,7 +9,7 @@ import static org.junit.Assert.*;
 public class UtilsTest {
 
     @BeforeClass
-    public static void setUpClass() throws Exception {
+    public static void setUpClass() {
         Logger.init("logging.properties", TestUtils.LOG_LEVEL);
     }
 
