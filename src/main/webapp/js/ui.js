@@ -12,6 +12,7 @@ var ui = {
             ui.createCheckBox('#form-create-checkboxes', 'cbAnswers', false, 'Show user\'s answers');
             ui.createCheckBox('#form-create-checkboxes', 'cbStats', true, 'Show statistics');
             ui.createCheckBox('#form-create-checkboxes', 'cbLock', false, 'Lock room at start');
+            ui.createCheckBox('#form-create-checkboxes', 'cbRefresh', true, 'Automatically refresh content');
         }
     },
     addAlert: function (type, text) {
@@ -98,7 +99,8 @@ var ui = {
                 $("#question-pack").prop('selectedIndex'),
                 ui.checkBoxValue('cbAnswers'),
                 ui.checkBoxValue('cbStats'),
-                ui.checkBoxValue('cbLock')
+                ui.checkBoxValue('cbLock'),
+                ui.checkBoxValue('cbRefresh')
             );
         });
         $("#btn-cancel").click(function () {
@@ -142,16 +144,11 @@ var ui = {
 
     },
     updateAnswer: function (ans, plain, text, answered, total) {
-
         var html = ans + " : " + text;
-
-        console.log(answered,total);
-
         if (answered !== undefined) {
             var percent = total <= 0 ? 0 : (100 * (answered / total)).toFixed(0);
             html = percent + '% ' + html;
         }
-
         $('#answer-' + ans)
             .attr("class", "btn btn-" + (plain ? '' : 'outline-') + mapping.letterToColor(ans) + " btn-block btn-lg")
             .html(html);

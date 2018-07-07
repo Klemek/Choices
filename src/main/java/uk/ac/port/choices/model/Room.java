@@ -24,12 +24,13 @@ public class Room {
     private final String masterId;
     private Room.State state;
     private final List<User> users;
+    private final boolean lock;
 
-    public Room(List<Question> questions, String masterId) {
-        this(null, Utils.getRandomString(6,"I","l","O","0"), questions, 0, masterId, Room.State.REGISTERING, new ArrayList<>());
+    public Room(List<Question> questions, String masterId, boolean lock) {
+        this(null, Utils.getRandomString(6, "I", "l", "O", "0"), questions, 0, masterId, Room.State.REGISTERING, new ArrayList<>(), lock);
     }
 
-    public Room(Long id, String simpleId, List<Question> questions, int round, String masterId, Room.State state, List<User> users) {
+    public Room(Long id, String simpleId, List<Question> questions, int round, String masterId, Room.State state, List<User> users, boolean lock) {
         this.id = id;
         this.simpleId = simpleId;
         this.questions = questions;
@@ -37,6 +38,7 @@ public class Room {
         this.masterId = masterId;
         this.state = state;
         this.users = users;
+        this.lock = lock;
     }
 
     public void setId(Long id) {
@@ -69,6 +71,14 @@ public class Room {
 
     public String getSimpleId() {
         return simpleId;
+    }
+
+    public boolean isLock() {
+        return lock;
+    }
+
+    public boolean isLocked() {
+        return (lock && state != Room.State.REGISTERING) || state == Room.State.CLOSED;
     }
 
     public void next() {
@@ -113,7 +123,7 @@ public class Room {
         output.put("state", state.toString());
         output.put("roundCount", questions.size());
 
-        if(state == Room.State.ANSWERING || state == Room.State.RESULTS){
+        if (state == Room.State.ANSWERING || state == Room.State.RESULTS) {
             JSONArray answers = new JSONArray();
             for (String answer : questions.get(round).getAnswers()) {
                 answers.put(answer);
@@ -148,11 +158,12 @@ public class Room {
         return "Room{" +
                 "id=" + id +
                 ", simpleId='" + simpleId + '\'' +
-                ", questions.size=" + questions.size() +
+                ", questions=" + questions +
                 ", round=" + round +
                 ", masterId='" + masterId + '\'' +
                 ", state=" + state +
-                ", users.size=" + users.size() +
+                ", users=" + users +
+                ", lock=" + lock +
                 '}';
     }
 }

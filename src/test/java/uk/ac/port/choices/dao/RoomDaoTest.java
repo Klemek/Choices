@@ -19,22 +19,23 @@ public class RoomDaoTest {
     private static Datastore datastore;
     private static KeyFactory keyFactory;
     private static RoomDao dao;
+    private static Room room;
 
     @BeforeClass
     public static void setUp() {
         RoomDaoTest.datastore = DatastoreOptions.getDefaultInstance().getService();
         RoomDaoTest.keyFactory = RoomDaoTest.datastore.newKeyFactory().setKind(RoomDao.KIND);
         RoomDaoTest.dao = new RoomDao();
-    }
 
-    @Test
-    public void entityToRoom() {
         List<Question> questionList = new ArrayList<>();
         questionList.add(new Question("What is 1+1", new String[]{"1", "2", "3", "4"}));
         List<User> users = new ArrayList<>();
         users.add(new User("id", "name", "imageUrl", 4));
-        Room room = new Room(1L, "ABCDE", questionList, 5, "abcde", Room.State.ANSWERING, users);
+        room = new Room(1L, Utils.getRandomString(6), questionList, 5, "abcde", Room.State.ANSWERING, users, true);
+    }
 
+    @Test
+    public void entityToRoom() {
         Entity entity = Entity.newBuilder(RoomDaoTest.keyFactory.newKey(room.getId()))
                 .set(RoomDao.USERS, RoomDao.userListToJsonList(room.getUsers()))
                 .set(RoomDao.QUESTIONS, RoomDao.questionListTojsonList(room.getQuestions()))
@@ -42,6 +43,7 @@ public class RoomDaoTest {
                 .set(RoomDao.STATE, room.getState().toString())
                 .set(RoomDao.ROUND, room.getRound())
                 .set(RoomDao.SIMPLEID, room.getSimpleId())
+                .set(RoomDao.LOCK, room.isLock())
                 .build();
 
         Room room2 = RoomDao.entityToRoom(entity);
@@ -53,12 +55,6 @@ public class RoomDaoTest {
 
     @Test
     public void roomToEntityBuilder() {
-        List<Question> questionList = new ArrayList<>();
-        questionList.add(new Question("What is 1+1", new String[]{"1", "2", "3", "4"}));
-        List<User> users = new ArrayList<>();
-        users.add(new User("id", "name", "imageUrl", 4));
-        Room room = new Room(1L, "ABCDE", questionList, 5, "abcde", Room.State.ANSWERING, users);
-
         Entity entity = (Entity) RoomDao.roomToEntityBuilder(room, Entity.newBuilder(RoomDaoTest.keyFactory.newKey(room.getId()))).build();
 
         Room room2 = RoomDao.entityToRoom(entity);
@@ -153,12 +149,6 @@ public class RoomDaoTest {
 
     @Test
     public void createRoom() {
-        List<Question> questionList = new ArrayList<>();
-        questionList.add(new Question("What is 1+1", new String[]{"1", "2", "3", "4"}));
-        List<User> users = new ArrayList<>();
-        users.add(new User("id", "name", "imageUrl", 4));
-        Room room = new Room(0L, "ABCDE", questionList, 5, "abcde", Room.State.ANSWERING, users);
-
         Long id = RoomDaoTest.dao.createRoom(room);
 
         assertNotNull(id);
@@ -170,11 +160,6 @@ public class RoomDaoTest {
 
     @Test
     public void getRoomBySimpleId() {
-        List<Question> questionList = new ArrayList<>();
-        questionList.add(new Question("What is 1+1", new String[]{"1", "2", "3", "4"}));
-        List<User> users = new ArrayList<>();
-        users.add(new User("id", "name", "imageUrl", 4));
-        Room room = new Room(0L, Utils.getRandomString(6), questionList, 5, "abcde", Room.State.ANSWERING, users);
         assertNotNull(RoomDaoTest.dao.createRoom(room));
 
         Room room2 = RoomDaoTest.dao.getRoomBySimpleId(room.getSimpleId());
@@ -188,11 +173,6 @@ public class RoomDaoTest {
 
     @Test
     public void updateRoom() {
-        List<Question> questionList = new ArrayList<>();
-        questionList.add(new Question("What is 1+1", new String[]{"1", "2", "3", "4"}));
-        List<User> users = new ArrayList<>();
-        users.add(new User("id", "name", "imageUrl", 4));
-        Room room = new Room(0L, Utils.getRandomString(6), questionList, 5, "abcde", Room.State.ANSWERING, users);
         assertNotNull(RoomDaoTest.dao.createRoom(room));
 
         Room room2 = RoomDaoTest.dao.getRoomBySimpleId(room.getSimpleId());
@@ -211,11 +191,6 @@ public class RoomDaoTest {
 
     @Test
     public void deleteRoom() {
-        List<Question> questionList = new ArrayList<>();
-        questionList.add(new Question("What is 1+1", new String[]{"1", "2", "3", "4"}));
-        List<User> users = new ArrayList<>();
-        users.add(new User("id", "name", "imageUrl", 4));
-        Room room = new Room(0L, Utils.getRandomString(6), questionList, 5, "abcde", Room.State.ANSWERING, users);
         assertNotNull(RoomDaoTest.dao.createRoom(room));
 
         Room room2 = RoomDaoTest.dao.getRoomBySimpleId(room.getSimpleId());

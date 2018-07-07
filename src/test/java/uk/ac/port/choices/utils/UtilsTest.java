@@ -2,10 +2,13 @@ package uk.ac.port.choices.utils;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import uk.ac.port.choices.TestUtils;
 
 import static org.junit.Assert.*;
 
+@RunWith(JUnit4.class)
 public class UtilsTest {
 
     @BeforeClass

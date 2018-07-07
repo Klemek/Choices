@@ -27,6 +27,7 @@ public class RoomDao {
     static final String STATE = "state";
     static final String USERS = "users";
     static final String SIMPLEID = "simpleId";
+    static final String LOCK = "lock";
 
     //USER JSON
 
@@ -65,7 +66,7 @@ public class RoomDao {
         FullEntity<IncompleteKey> incRoomEntity = (FullEntity<IncompleteKey>) RoomDao.roomToEntityBuilder(room, Entity.newBuilder(key)).build();
         Entity roomEntity = datastore.add(incRoomEntity); // Save the Entity
         room.setId(roomEntity.getKey().getId());
-        Logger.log(Level.INFO, "Room {0} created", room.getSimpleId());
+        Logger.log(Level.INFO, "Room {0} created : {1}", room.getSimpleId(), room);
         return roomEntity.getKey().getId();
     }
 
@@ -83,7 +84,7 @@ public class RoomDao {
         Key key = keyFactory.newKey(room.getId());
         Entity entity = (Entity) RoomDao.roomToEntityBuilder(room, Entity.newBuilder(key)).build();
         datastore.update(entity);
-        Logger.log(Level.INFO, "Room {0} updated", room.getSimpleId());
+        Logger.log(Level.INFO, "Room {0} updated : {1}", room.getSimpleId(), room);
     }
 
     public void deleteRoom(Room room) {
@@ -97,20 +98,14 @@ public class RoomDao {
     //region Class functions
 
     static Room entityToRoom(Entity entity) {
-        List<Question> questions = RoomDao.jsonListToQuestionList(entity.getList(RoomDao.QUESTIONS));
-        List<User> users = RoomDao.jsonListToUserList(entity.getList(RoomDao.USERS));
-        int round = (int) entity.getLong(RoomDao.ROUND);
-        Room.State state = Room.parseState(entity.getString(RoomDao.STATE));
-        String masterId = entity.getString(RoomDao.MASTERID);
-        String simpleId = entity.getString(RoomDao.SIMPLEID);
-
         return new Room(entity.getKey().getId(),
-                simpleId,
-                questions,
-                round,
-                masterId,
-                state,
-                users);
+                entity.getString(RoomDao.SIMPLEID),
+                RoomDao.jsonListToQuestionList(entity.getList(RoomDao.QUESTIONS)),
+                (int) entity.getLong(RoomDao.ROUND),
+                entity.getString(RoomDao.MASTERID),
+                Room.parseState(entity.getString(RoomDao.STATE)),
+                RoomDao.jsonListToUserList(entity.getList(RoomDao.USERS)),
+                entity.getBoolean(RoomDao.LOCK));
     }
 
     @SuppressWarnings("unchecked")
@@ -120,7 +115,8 @@ public class RoomDao {
                 .set(RoomDao.MASTERID, room.getMasterId())
                 .set(RoomDao.STATE, room.getState().toString())
                 .set(RoomDao.ROUND, room.getRound())
-                .set(RoomDao.SIMPLEID, room.getSimpleId());
+                .set(RoomDao.SIMPLEID, room.getSimpleId())
+                .set(RoomDao.LOCK, room.isLock());
     }
 
     static StringValue userToJson(User user) {

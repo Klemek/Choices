@@ -31,7 +31,7 @@ public class RoomServlet extends HttpServlet {
             if (userId == null)
                 return;
             Map<String, Runnable> map = new LinkedHashMap<>();
-            map.put("PUT /api/room/create", () -> RoomServlet.createRoom(userId, response));
+            map.put("PUT /api/room/create", () -> RoomServlet.createRoom(userId, request, response));
             map.put("GET /api/room/{}", () -> RoomServlet.getRoomInfo(userId, request, response));
             map.put("POST /api/room/{}/join", () -> RoomServlet.joinRoom(request, response));
             map.put("DELETE /api/room/{}/quit", () -> RoomServlet.quitRoom(userId, request, response));
@@ -49,13 +49,18 @@ public class RoomServlet extends HttpServlet {
     /**
      * PUT /api/room/create
      */
-    private static void createRoom(String userId, HttpServletResponse response) {
+    private static void createRoom(String userId, HttpServletRequest request, HttpServletResponse response) {
+        Map<String, String> params = ServletUtils.readParameters(request); //because of PUT request
+
         List<Question> questionList = new ArrayList<>();
         questionList.add(new Question("What is 1+1", new String[]{"2", "1", "3", "4"}));
         questionList.add(new Question("What is 2*2", new String[]{"4", "2", "3", "1"}));
         questionList.add(new Question("What is 1+2", new String[]{"3", "2", "1", "4"}));
         questionList.add(new Question("What is 2+2", new String[]{"4", "2", "3", "1"}));
-        Room room = new Room(questionList, userId);
+
+        boolean lock = request.getParameter("lock") != null || params.containsKey("lock");
+
+        Room room = new Room(questionList, userId, lock);
         RoomServlet.dao.createRoom(room);
         if (room.getId() != null) {
             ServletUtils.sendJSONResponse(response, room.toJSON());
@@ -81,8 +86,8 @@ public class RoomServlet extends HttpServlet {
         Room room = RoomServlet.getRoomFromRequest(request, response);
         if (room == null)
             return;
-        if(room.getState() == Room.State.CLOSED){
-            ServletUtils.sendError(response, HttpServletResponse.SC_FORBIDDEN, "Room is closed");
+        if (room.isLocked()) {
+            ServletUtils.sendError(response, HttpServletResponse.SC_FORBIDDEN, "Room is locked");
             return;
         }
         User u = RoomServlet.getUser(request);

@@ -41,7 +41,7 @@ public class RoomServletTest {
     public void setUp() {
         List<Question> questionList = new ArrayList<>();
         questionList.add(new Question("What is 1+1", new String[]{"2", "1", "3", "4"}));
-        room = new Room(questionList, "masterid");
+        room = new Room(questionList, "masterid", true);
         RoomServletTest.dao.createRoom(room);
     }
 
@@ -87,8 +87,11 @@ public class RoomServletTest {
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, userid);
 
+        Map<String, String> params = new HashMap<>();
+        params.put("lock", "");
+
         StringWriter writer = new StringWriter();
-        HttpServletRequest request = TestUtils.createMockRequest("PUT", "/api/room/create", null, null, session);
+        HttpServletRequest request = TestUtils.createMockRequest("PUT", "/api/room/create", params, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
 
         new RoomServlet().service(request, response);
@@ -104,6 +107,7 @@ public class RoomServletTest {
         assertNotNull(room);
 
         assertEquals(userid, room.getMasterId());
+        assertTrue(room.isLock());
     }
 
     @Test
@@ -185,11 +189,7 @@ public class RoomServletTest {
 
     @Test
     public void testJoinRoomClosed() {
-
-        room.next(); //answering
-        room.next(); //results
-        room.next(); //closed
-        assertEquals(Room.State.CLOSED, room.getState());
+        room.next();
         RoomServletTest.dao.updateRoom(room);
 
         String userid = "userid";

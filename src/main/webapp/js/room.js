@@ -3,7 +3,7 @@ var room = {
     autoRefresh: undefined,
     currentState: undefined,
     currentMembers: undefined,
-    answers: undefined,
+    answers: [],
     showAnswers: undefined,
     showStats: undefined,
     stats: undefined,
@@ -47,7 +47,7 @@ var room = {
 
             switch (data.status) {
                 case 403:
-                    ui.addAlert("danger", "Cannot join closed room " + tmproomid);
+                    ui.addAlert("danger", "Cannot join locked room " + tmproomid);
                     break;
                 case 404:
                     ui.addAlert("danger", "Cannot find room " + tmproomid);
@@ -65,6 +65,17 @@ var room = {
                 ui.addMember(member);
             });
         }
+
+        var correct = this.answers.indexOf(0) + 1,
+            total = 0,
+            answered = {1: 0, 2: 0, 3: 0, 4: 0};
+
+        data.users.forEach(function (member) {
+            if (member.answer > 0) {
+                total++;
+                answered[member.answer]++;
+            }
+        });
 
         if (data.state !== this.currentState) {
             switch (data.state) {
@@ -92,6 +103,7 @@ var room = {
                     );
 
                     this.answers = Math.shuffle([0, 1, 2, 3]);
+
                     ['A', 'B', 'C', 'D'].forEach(function (ans) {
                         ui.updateAnswer(
                             ans,
@@ -101,19 +113,7 @@ var room = {
                     });
                     break;
                 case "RESULTS":
-                    var correct = room.answers.indexOf(0) + 1,
-                        total = 0,
-                        answered = {1: 0, 2: 0, 3: 0, 4: 0};
-
-                    data.users.forEach(function (member) {
-                        if (member.answer > 0) {
-                            total++;
-                            answered[member.answer]++;
-                        }
-                    });
-
                     this.stats.push([answered[correct], total]);
-
                     ui.updateRoomView(
                         this.id,
                         ui.getRoomText(
@@ -148,6 +148,18 @@ var room = {
             }
         }
 
+        if(data.state === "ANSWERING" && total === data.users.length){
+            ['A', 'B', 'C', 'D'].forEach(function (ans, i) {
+                ui.updateAnswer(
+                    ans,
+                    true,
+                    data.answers[room.answers[mapping.letterToAnswer[ans] - 1]],
+                    room.showStats ? answered[mapping.letterToAnswer[ans]] : undefined,
+                    room.showStats ? total : undefined
+                );
+            });
+        }
+
         if (data.users.toString() !== this.currentMembers) {
             data.users.forEach(function (member) {
                 if (data.state === "RESULTS" && this.showAnswers)
@@ -161,13 +173,19 @@ var room = {
         this.currentMembers = JSON.stringify(data.users);
     },
     //button events
-    create: function (packIndex, showAnswers, showStats, lockRoom) {
+    create: function (packIndex, showAnswers, showStats, lockRoom, autoRefresh) {
         ui.loading();
-        ajax.call('PUT', '/room/create?pack=' + packIndex + (lockRoom ? '&lock' : ''), function (data) {
+        var data = {
+            pack: packIndex
+        };
+        if (lockRoom)
+            data.lock = true;
+        ajax.call('PUT', '/room/create', data, function (data) {
             ui.showView('room');
             room.set(data.id, true, true);
             room.refresh(data);
-            room.changeAutoRefresh();
+            if(autoRefresh)
+                room.changeAutoRefresh();
             room.showAnswers = showAnswers;
             room.showStats = showStats;
         }, function () {
