@@ -11,6 +11,10 @@ public class User {
     private final String imageUrl;
     private int answer;
 
+    public User(String id) {
+        this(id, null, null);
+    }
+
     public User(String id, String name, String imageUrl) {
         this(id,name,imageUrl,0);
     }

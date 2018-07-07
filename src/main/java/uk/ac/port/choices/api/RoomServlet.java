@@ -13,7 +13,10 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @WebServlet("/api/room/*")
 public class RoomServlet extends HttpServlet {
@@ -32,6 +35,8 @@ public class RoomServlet extends HttpServlet {
             map.put("GET /api/room/{}", () -> RoomServlet.getRoomInfo(userId, request, response));
             map.put("POST /api/room/{}/join", () -> RoomServlet.joinRoom(request, response));
             map.put("DELETE /api/room/{}/quit", () -> RoomServlet.quitRoom(userId, request, response));
+            map.put("DELETE /api/room/{}/delete", () -> RoomServlet.deleteRoom(userId, request, response));
+            map.put("DELETE /api/room/{}/kick/{}", () -> RoomServlet.kickFromRoom(userId, request, response));
             map.put("POST /api/room/{}/answer/{}", () -> RoomServlet.answerRoomQuestion(userId, request, response));
             map.put("POST /api/room/{}/next", () -> RoomServlet.nextRoomQuestion(userId, request, response));
             ServletUtils.mapRequest(request, response, map);
@@ -76,12 +81,10 @@ public class RoomServlet extends HttpServlet {
         Room room = RoomServlet.getRoomFromRequest(request, response);
         if (room == null)
             return;
-
         if(room.getState() == Room.State.CLOSED){
             ServletUtils.sendError(response, HttpServletResponse.SC_FORBIDDEN, "Room is closed");
             return;
         }
-
         User u = RoomServlet.getUser(request);
         if(!room.getUsers().contains(u)){
             room.getUsers().add(RoomServlet.getUser(request));
@@ -102,9 +105,34 @@ public class RoomServlet extends HttpServlet {
             room.getUsers().remove(u);
             RoomServlet.dao.updateRoom(room);
         }
-        else if(room.getMasterId().equals(userId))
-            RoomServlet.dao.deleteRoom(room);
         ServletUtils.sendOK(response);
+    }
+
+    /**
+     * DELETE /api/room/{}/delete
+     */
+    private static void deleteRoom(String userId, HttpServletRequest request, HttpServletResponse response) {
+        Room room = RoomServlet.getRoomFromRequest(request, response);
+        if (room == null || RoomServlet.isForbidden(response, userId, room, true))
+            return;
+        RoomServlet.dao.deleteRoom(room);
+        ServletUtils.sendOK(response);
+    }
+
+    /**
+     * DELETE /api/room/{}/kick/{}
+     */
+    private static void kickFromRoom(String userId, HttpServletRequest request, HttpServletResponse response) {
+        Room room = RoomServlet.getRoomFromRequest(request, response);
+        if (room == null || RoomServlet.isForbidden(response, userId, room, true))
+            return;
+        String[] path = request.getRequestURI().split("/");
+        User u = new User(path[5]);
+        if (room.getUsers().contains(u)) {
+            room.getUsers().remove(u);
+            RoomServlet.dao.updateRoom(room);
+        }
+        ServletUtils.sendJSONResponse(response, room.toJSON());
     }
 
     /**
@@ -163,11 +191,13 @@ public class RoomServlet extends HttpServlet {
     }
 
     private static boolean isForbidden(HttpServletResponse response, String userId, Room room, boolean master) {
+        //master
         if (master && !room.getMasterId().equals(userId)) {
             ServletUtils.sendError(response, HttpServletResponse.SC_FORBIDDEN);
             return true;
         }
-        if(!room.getMasterId().equals(userId) && !BetterArrayList.fromList(room.getUsers()).any(u -> u.getId().equals(userId))){
+        //member
+        if (!master && !BetterArrayList.fromList(room.getUsers()).any(u -> u.getId().equals(userId))) {
             ServletUtils.sendError(response, HttpServletResponse.SC_FORBIDDEN);
             return true;
         }

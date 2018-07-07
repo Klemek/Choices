@@ -5,19 +5,6 @@ var room = {
     currentMembers: undefined,
     answers: undefined,
 
-    create: function () {
-        ui.loading();
-        ajax.call('PUT', '/room/create', function (data) {
-            ui.showView('room');
-            room.set(data.id, true, true);
-            room.refresh(data);
-            room.changeAutoRefresh();
-        }, function () {
-            ui.showView('menu');
-            ui.addAlert("danger", "Cannot create room");
-        });
-    },
-
     set: function (tmproomid, master, pushstate) {
         this.id = tmproomid;
 
@@ -34,7 +21,7 @@ var room = {
         $(window).on('unload', function () {
             $.ajax({
                 type: 'DELETE',
-                url: '/api/room/' + room.id + '/quit',
+                url: '/api/room/' + room.id + (master ? '/delete' : '/quit'),
                 async: false,
                 data: {}
             });
@@ -48,6 +35,11 @@ var room = {
             room.set(tmproomid, false, pushstate);
         }, function (data) {
 
+            if (window.location.search && window.location.search.length > 0) {
+                window.history.pushState(null, "Choices", "/");
+            }
+            ui.showView('menu');
+
             switch (data.status) {
                 case 403:
                     ui.addAlert("danger", "Cannot join closed room " + tmproomid);
@@ -59,16 +51,9 @@ var room = {
                     ui.addAlert("danger", "Cannot join room " + tmproomid);
                     break;
             }
-
-            if (window.location.search && window.location.search.length > 0) {
-                window.history.pushState(null, "Choices", "/");
-            }
-
-            ui.showView('menu');
         });
     },
     refresh: function (data) {
-
         if (data.users.toString() !== this.currentMembers) {
             ui.clearMembers();
             data.users.forEach(function (member) {
@@ -135,16 +120,17 @@ var room = {
         this.currentMembers = JSON.stringify(data.users);
     },
     //button events
-    ajaxRefresh: function () {
-        ajax.call('GET', '/room/' + room.id, function (data) {
+    create: function () {
+        ui.loading();
+        ajax.call('PUT', '/room/create', function (data) {
+            ui.showView('room');
+            room.set(data.id, true, true);
             room.refresh(data);
+            room.changeAutoRefresh();
         }, function () {
-            $(window).unbind('beforeunload');
-            window.location.href = "/";
+            ui.showView('menu');
+            ui.addAlert("danger", "Cannot create room");
         });
-    },
-    answerQuestion: function (val) {
-        ajax.call('POST', '/room/' + room.id + '/answer/' + val);
     },
     next: function () {
         ajax.call('POST', '/room/' + room.id + '/next', function (data) {
@@ -153,11 +139,13 @@ var room = {
             ui.addAlert("warning", "Cannot edit room, please retry");
         });
     },
-    delete: function () {
-        if (window.confirm("Are you sure you want to delete the room ?")) {
+    ajaxRefresh: function () {
+        ajax.call('GET', '/room/' + room.id, function (data) {
+            room.refresh(data);
+        }, function () {
             $(window).unbind('beforeunload');
             window.location.href = "/";
-        }
+        });
     },
     changeAutoRefresh: function () {
         if (room.autoRefresh) {
@@ -167,6 +155,22 @@ var room = {
             room.autoRefresh = setInterval(room.ajaxRefresh, 1000);
         }
         ui.setAutoRefresh(room.autoRefresh);
+    },
+    delete: function () {
+        if (window.confirm("Are you sure you want to delete the room ?")) {
+            $(window).unbind('beforeunload');
+            window.location.href = "/";
+        }
+    },
+    answerQuestion: function (val) {
+        ajax.call('POST', '/room/' + room.id + '/answer/' + val, function () {
+        }, function () {
+            if (window.location.search && window.location.search.length > 0) {
+                window.history.pushState(null, "Choices", "/");
+            }
+            ui.showView('menu');
+            ui.addAlert("danger", "Disconnected from room " + room.id);
+        });
     },
     kick: function (memberId, memberName) {
         if (window.confirm("Are you sure you want to kick " + memberName + " ?")) {

@@ -42,6 +42,7 @@ var ui = {
         $('#loading').show();
     },
     hideAll: function(){
+        $('#alerts').html('');
         this.views.forEach(function(name){
             $('#'+name+'-view').hide();
         });

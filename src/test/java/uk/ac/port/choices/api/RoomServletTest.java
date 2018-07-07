@@ -244,29 +244,9 @@ public class RoomServletTest {
     }
 
     @Test
-    public void testQuitRoomMaster() {
-        room.getUsers().add(new User("userid", "name", "imageUrl", 0));
-        RoomServletTest.dao.updateRoom(room);
-
-        Map<String, Object> session = new HashMap<>();
-        session.put(Oauth2CallbackServlet.SESSION_USER_ID, room.getMasterId());
-
-        StringWriter writer = new StringWriter();
-        HttpServletRequest request = TestUtils.createMockRequest("DELETE", "/api/room/" + room.getSimpleId() + "/quit", null, null, session);
-        HttpServletResponse response = TestUtils.createMockResponse(writer);
-
-        new RoomServlet().service(request, response);
-
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
-        assertEquals(200, res.getInt("code"));
-        room = RoomServletTest.dao.getRoomBySimpleId(room.getSimpleId());
-        assertNull(room);
-    }
-
-    @Test
     public void testQuitRoomForbidden() {
         Map<String, Object> session = new HashMap<>();
-        session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
+        session.put(Oauth2CallbackServlet.SESSION_USER_ID, room.getMasterId());
 
         StringWriter writer = new StringWriter();
         HttpServletRequest request = TestUtils.createMockRequest("DELETE", "/api/room/" + room.getSimpleId() + "/quit", null, null, session);
@@ -285,6 +265,121 @@ public class RoomServletTest {
 
         StringWriter writer = new StringWriter();
         HttpServletRequest request = TestUtils.createMockRequest("DELETE", "/api/room/1234/quit", null, null, session);
+        HttpServletResponse response = TestUtils.createMockResponse(writer);
+
+        new RoomServlet().service(request, response);
+
+        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        assertEquals(404, res.getInt("code"));
+    }
+
+    @Test
+    public void testDeleteRoom() {
+        room.getUsers().add(new User("userid", "name", "imageUrl", 0));
+        RoomServletTest.dao.updateRoom(room);
+
+        Map<String, Object> session = new HashMap<>();
+        session.put(Oauth2CallbackServlet.SESSION_USER_ID, room.getMasterId());
+
+        StringWriter writer = new StringWriter();
+        HttpServletRequest request = TestUtils.createMockRequest("DELETE", "/api/room/" + room.getSimpleId() + "/delete", null, null, session);
+        HttpServletResponse response = TestUtils.createMockResponse(writer);
+
+        new RoomServlet().service(request, response);
+
+        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        assertEquals(200, res.getInt("code"));
+        room = RoomServletTest.dao.getRoomBySimpleId(room.getSimpleId());
+        assertNull(room);
+    }
+
+    @Test
+    public void testDeleteRoomForbidden() {
+        String userid = "userid";
+        room.getUsers().add(new User(userid, "name", "imageUrl", 0));
+        RoomServletTest.dao.updateRoom(room);
+
+        Map<String, Object> session = new HashMap<>();
+        session.put(Oauth2CallbackServlet.SESSION_USER_ID, userid);
+
+        StringWriter writer = new StringWriter();
+        HttpServletRequest request = TestUtils.createMockRequest("DELETE", "/api/room/" + room.getSimpleId() + "/delete", null, null, session);
+        HttpServletResponse response = TestUtils.createMockResponse(writer);
+
+        new RoomServlet().service(request, response);
+
+        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        assertEquals(403, res.getInt("code"));
+    }
+
+    @Test
+    public void testDeleteRoomNotFound() {
+        String userid = "userid";
+        room.getUsers().add(new User(userid, "name", "imageUrl", 0));
+        RoomServletTest.dao.updateRoom(room);
+
+        Map<String, Object> session = new HashMap<>();
+        session.put(Oauth2CallbackServlet.SESSION_USER_ID, userid);
+
+        StringWriter writer = new StringWriter();
+        HttpServletRequest request = TestUtils.createMockRequest("DELETE", "/api/room/12345/delete", null, null, session);
+        HttpServletResponse response = TestUtils.createMockResponse(writer);
+
+        new RoomServlet().service(request, response);
+
+        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        assertEquals(404, res.getInt("code"));
+    }
+
+    @Test
+    public void testKickFromRoom() {
+        String userid = "userid";
+        room.getUsers().add(new User(userid, "name", "imageUrl", 0));
+        RoomServletTest.dao.updateRoom(room);
+
+        Map<String, Object> session = new HashMap<>();
+        session.put(Oauth2CallbackServlet.SESSION_USER_ID, room.getMasterId());
+
+        StringWriter writer = new StringWriter();
+        HttpServletRequest request = TestUtils.createMockRequest("DELETE", "/api/room/" + room.getSimpleId() + "/kick/" + userid, null, null, session);
+        HttpServletResponse response = TestUtils.createMockResponse(writer);
+
+        new RoomServlet().service(request, response);
+
+        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        assertEquals(200, res.getInt("code"));
+        room = RoomServletTest.dao.getRoomBySimpleId(room.getSimpleId());
+        assertEquals(0, room.getUsers().size());
+    }
+
+    @Test
+    public void testKickFromRoomForbidden() {
+        String userid = "userid";
+        room.getUsers().add(new User(userid, "name", "imageUrl", 0));
+        RoomServletTest.dao.updateRoom(room);
+
+        Map<String, Object> session = new HashMap<>();
+        session.put(Oauth2CallbackServlet.SESSION_USER_ID, userid);
+
+        StringWriter writer = new StringWriter();
+        HttpServletRequest request = TestUtils.createMockRequest("DELETE", "/api/room/" + room.getSimpleId() + "/kick/" + userid, null, null, session);
+        HttpServletResponse response = TestUtils.createMockResponse(writer);
+
+        new RoomServlet().service(request, response);
+
+        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        assertEquals(403, res.getInt("code"));
+    }
+
+    @Test
+    public void testKickFromRoomNotFound() {
+        String userid = "userid";
+
+        Map<String, Object> session = new HashMap<>();
+        session.put(Oauth2CallbackServlet.SESSION_USER_ID, userid);
+
+        StringWriter writer = new StringWriter();
+        HttpServletRequest request = TestUtils.createMockRequest("DELETE", "/api/room/12345/kick/" + userid, null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
 
         new RoomServlet().service(request, response);
