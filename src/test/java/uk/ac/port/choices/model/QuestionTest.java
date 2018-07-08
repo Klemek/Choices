@@ -13,10 +13,10 @@ public class QuestionTest {
 
         JSONObject json = q.toJSON();
 
-        assertEquals(q.getText(), json.getString(Question.TEXT));
-        assertEquals(q.getHint(), json.getString(Question.HINT));
-        assertEquals(q.getAnswers().length, json.getJSONArray(Question.ANSWERS).length());
-        assertEquals(q.getAnswers()[0], json.getJSONArray(Question.ANSWERS).getString(0));
+        assertEquals(q.getText(), json.getString(Question.KEY_TEXT));
+        assertEquals(q.getHint(), json.getString(Question.KEY_HINT));
+        assertEquals(q.getAnswers().length, json.getJSONArray(Question.KEY_ANSWERS).length());
+        assertEquals(q.getAnswers()[0], json.getJSONArray(Question.KEY_ANSWERS).getString(0));
         assertEquals(3, json.length());
     }
 

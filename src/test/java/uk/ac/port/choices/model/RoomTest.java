@@ -24,14 +24,14 @@ public class RoomTest {
 
         JSONObject json = room.toJSON();
         assertEquals(7, json.length());
-        assertEquals(room.getSimpleId(), json.getString(Room.ID));
-        assertEquals(room.getState().toString(), json.getString(Room.STATE));
-        assertEquals(room.isLocked(), json.getBoolean(Room.LOCK));
-        assertEquals(room.getRound(), json.getInt(Room.ROUND));
-        assertEquals(room.getQuestions().size(), json.getInt(Room.ROUND_COUNT));
-        assertEquals(1, json.getJSONArray(Room.USERS).length());
-        assertEquals(user.toJSON().toString(), json.getJSONArray(Room.USERS).getJSONObject(0).toString());
-        assertEquals(question.toJSON().toString(), json.getJSONObject(Room.QUESTION).toString());
+        assertEquals(room.getSimpleId(), json.getString(Room.KEY_ID));
+        assertEquals(room.getState().toString(), json.getString(Room.KEY_STATE));
+        assertEquals(room.isLocked(), json.getBoolean(Room.KEY_LOCK));
+        assertEquals(room.getRound(), json.getInt(Room.KEY_ROUND));
+        assertEquals(room.getQuestions().size(), json.getInt(Room.KEY_ROUND_COUNT));
+        assertEquals(1, json.getJSONArray(Room.KEY_USERS).length());
+        assertEquals(user.toJSON().toString(), json.getJSONArray(Room.KEY_USERS).getJSONObject(0).toString());
+        assertEquals(question.toJSON().toString(), json.getJSONObject(Room.KEY_QUESTION).toString());
 
     }
 }

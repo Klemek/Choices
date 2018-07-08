@@ -31,24 +31,24 @@ final class DaoUtils {
 
     static Room entityToRoom(Entity entity) {
         return new Room(entity.getKey().getId(),
-                entity.getString(Room.SIMPLEID),
-                DaoUtils.jsonListToQuestionList(entity.getList(Room.QUESTIONS)),
-                (int) entity.getLong(Room.ROUND),
-                entity.getString(Room.MASTERID),
-                Room.parseState(entity.getString(Room.STATE)),
-                DaoUtils.jsonListToUserList(entity.getList(Room.USERS)),
-                entity.getBoolean(Room.LOCK));
+                entity.getString(Room.KEY_SIMPLEID),
+                DaoUtils.jsonListToQuestionList(entity.getList(Room.KEY_QUESTIONS)),
+                (int) entity.getLong(Room.KEY_ROUND),
+                entity.getString(Room.KEY_MASTERID),
+                Room.parseState(entity.getString(Room.KEY_STATE)),
+                DaoUtils.jsonListToUserList(entity.getList(Room.KEY_USERS)),
+                entity.getBoolean(Room.KEY_LOCK));
     }
 
     @SuppressWarnings("unchecked")
     static BaseEntity.Builder roomToEntityBuilder(Room room, BaseEntity.Builder builder) {
-        return builder.set(Room.USERS, DaoUtils.userListToJsonList(room.getUsers()))
-                .set(Room.QUESTIONS, DaoUtils.questionListTojsonList(room.getQuestions()))
-                .set(Room.MASTERID, room.getMasterId())
-                .set(Room.STATE, room.getState().toString())
-                .set(Room.ROUND, room.getRound())
-                .set(Room.SIMPLEID, room.getSimpleId())
-                .set(Room.LOCK, room.isLocked());
+        return builder.set(Room.KEY_USERS, DaoUtils.userListToJsonList(room.getUsers()))
+                .set(Room.KEY_QUESTIONS, DaoUtils.questionListTojsonList(room.getQuestions()))
+                .set(Room.KEY_MASTERID, room.getMasterId())
+                .set(Room.KEY_STATE, room.getState().toString())
+                .set(Room.KEY_ROUND, room.getRound())
+                .set(Room.KEY_SIMPLEID, room.getSimpleId())
+                .set(Room.KEY_LOCK, room.isLocked());
     }
 
     //endregion

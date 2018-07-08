@@ -39,13 +39,13 @@ public class DaoUtilsTest {
     @Test
     public void entityToRoom() {
         Entity entity = Entity.newBuilder(DaoUtilsTest.roomKeyFactory.newKey(DaoUtilsTest.room.getId()))
-                .set(Room.USERS, DaoUtils.userListToJsonList(DaoUtilsTest.room.getUsers()))
-                .set(Room.QUESTIONS, DaoUtils.questionListTojsonList(DaoUtilsTest.room.getQuestions()))
-                .set(Room.MASTERID, DaoUtilsTest.room.getMasterId())
-                .set(Room.STATE, DaoUtilsTest.room.getState().toString())
-                .set(Room.ROUND, DaoUtilsTest.room.getRound())
-                .set(Room.SIMPLEID, DaoUtilsTest.room.getSimpleId())
-                .set(Room.LOCK, DaoUtilsTest.room.isLocked())
+                .set(Room.KEY_USERS, DaoUtils.userListToJsonList(DaoUtilsTest.room.getUsers()))
+                .set(Room.KEY_QUESTIONS, DaoUtils.questionListTojsonList(DaoUtilsTest.room.getQuestions()))
+                .set(Room.KEY_MASTERID, DaoUtilsTest.room.getMasterId())
+                .set(Room.KEY_STATE, DaoUtilsTest.room.getState().toString())
+                .set(Room.KEY_ROUND, DaoUtilsTest.room.getRound())
+                .set(Room.KEY_SIMPLEID, DaoUtilsTest.room.getSimpleId())
+                .set(Room.KEY_LOCK, DaoUtilsTest.room.isLocked())
                 .build();
 
         Room room2 = DaoUtils.entityToRoom(entity);

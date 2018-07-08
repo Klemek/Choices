@@ -13,10 +13,10 @@ public class UserTest {
 
         JSONObject json = u.toJSON();
 
-        assertEquals(u.getId(), json.getString(User.ID));
-        assertEquals(u.getImageUrl(), json.getString(User.IMAGEURL));
-        assertEquals(u.getName(), json.getString(User.NAME));
-        assertEquals(u.getAnswer(), json.getInt(User.ANSWER));
+        assertEquals(u.getId(), json.getString(User.KEY_ID));
+        assertEquals(u.getImageUrl(), json.getString(User.KEY_IMAGEURL));
+        assertEquals(u.getName(), json.getString(User.KEY_NAME));
+        assertEquals(u.getAnswer(), json.getInt(User.KEY_ANSWER));
         assertEquals(4, json.length());
     }
 

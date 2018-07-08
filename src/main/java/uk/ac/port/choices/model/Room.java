@@ -15,19 +15,19 @@ public class Room {
 
     //Entity
 
-    public static final String QUESTIONS = "questions";
-    public static final String ROUND = "round";
-    public static final String MASTERID = "masterid";
-    public static final String STATE = "state";
-    public static final String USERS = "users";
-    public static final String SIMPLEID = "simpleId";
-    public static final String LOCK = "lock";
+    public static final String KEY_QUESTIONS = "questions";
+    public static final String KEY_ROUND = "round";
+    public static final String KEY_MASTERID = "masterid";
+    public static final String KEY_STATE = "state";
+    public static final String KEY_USERS = "users";
+    public static final String KEY_SIMPLEID = "simpleId";
+    public static final String KEY_LOCK = "lock";
 
     //JSON
 
-    static final String ID = "id";
-    static final String QUESTION = "question";
-    static final String ROUND_COUNT = "roundCount";
+    static final String KEY_ID = "id";
+    static final String KEY_QUESTION = "question";
+    static final String KEY_ROUND_COUNT = "roundCount";
 
     //endregion
 
@@ -134,16 +134,16 @@ public class Room {
 
     public JSONObject toJSON() {
         JSONObject output = new JSONObject();
-        output.put(Room.ID, simpleId);
+        output.put(Room.KEY_ID, simpleId);
 
-        output.put(Room.USERS, new JSONArray(BetterArrayList.fromList(users).select(User::toJSON)));
-        output.put(Room.STATE, state.toString());
-        output.put(Room.ROUND_COUNT, questions.size());
-        output.put(Room.LOCK, lock);
+        output.put(Room.KEY_USERS, new JSONArray(BetterArrayList.fromList(users).select(User::toJSON)));
+        output.put(Room.KEY_STATE, state.toString());
+        output.put(Room.KEY_ROUND_COUNT, questions.size());
+        output.put(Room.KEY_LOCK, lock);
 
         if (state == Room.State.ANSWERING || state == Room.State.RESULTS) {
-            output.put(Room.QUESTION, questions.get(round).toJSON());
-            output.put(Room.ROUND, round);
+            output.put(Room.KEY_QUESTION, questions.get(round).toJSON());
+            output.put(Room.KEY_ROUND, round);
         }
 
         return output;

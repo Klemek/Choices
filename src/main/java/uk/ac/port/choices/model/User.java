@@ -10,10 +10,10 @@ public class User {
 
     //region keys
 
-    public static final String ID = "id";
-    public static final String NAME = "name";
-    public static final String IMAGEURL = "imageUrl";
-    public static final String ANSWER = "answer";
+    static final String KEY_ID = "id";
+    static final String KEY_NAME = "name";
+    static final String KEY_IMAGEURL = "imageUrl";
+    static final String KEY_ANSWER = "answer";
 
     //endregion
 
@@ -59,10 +59,10 @@ public class User {
 
     public JSONObject toJSON() {
         JSONObject output = new JSONObject();
-        output.put(User.ID, id);
-        output.put(User.NAME, name);
-        output.put(User.IMAGEURL, imageUrl);
-        output.put(User.ANSWER, answer);
+        output.put(User.KEY_ID, id);
+        output.put(User.KEY_NAME, name);
+        output.put(User.KEY_IMAGEURL, imageUrl);
+        output.put(User.KEY_ANSWER, answer);
         return output;
     }
 
@@ -70,10 +70,10 @@ public class User {
         try {
             JSONObject json = new JSONObject(strJSON);
             return new User(
-                    json.getString(User.ID),
-                    json.getString(User.NAME),
-                    json.getString(User.IMAGEURL),
-                    json.getInt(User.ANSWER)
+                    json.getString(User.KEY_ID),
+                    json.getString(User.KEY_NAME),
+                    json.getString(User.KEY_IMAGEURL),
+                    json.getInt(User.KEY_ANSWER)
             );
         } catch (JSONException e) {
             Logger.log(e);

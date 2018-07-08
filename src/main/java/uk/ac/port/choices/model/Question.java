@@ -13,9 +13,9 @@ public class Question {
 
     //region Keys
 
-    static final String TEXT = "text";
-    static final String HINT = "hint";
-    static final String ANSWERS = "answers";
+    static final String KEY_TEXT = "text";
+    static final String KEY_HINT = "hint";
+    static final String KEY_ANSWERS = "answers";
 
     //endregion
 
@@ -52,9 +52,9 @@ public class Question {
 
     public JSONObject toJSON() {
         JSONObject output = new JSONObject();
-        output.put(Question.TEXT, text);
-        output.put(Question.HINT, hint);
-        output.put(Question.ANSWERS, new JSONArray(answers));
+        output.put(Question.KEY_TEXT, text);
+        output.put(Question.KEY_HINT, hint);
+        output.put(Question.KEY_ANSWERS, new JSONArray(answers));
         return output;
     }
 
@@ -62,9 +62,9 @@ public class Question {
         try {
             JSONObject json = new JSONObject(strJSON);
             return new Question(
-                    json.getString(Question.TEXT),
-                    json.getString(Question.HINT),
-                    Utils.jArrayToStringList(json.getJSONArray(Question.ANSWERS)).toArray(new String[0])
+                    json.getString(Question.KEY_TEXT),
+                    json.getString(Question.KEY_HINT),
+                    Utils.jArrayToStringList(json.getJSONArray(Question.KEY_ANSWERS)).toArray(new String[0])
             );
         } catch (JSONException e) {
             Logger.log(e);
