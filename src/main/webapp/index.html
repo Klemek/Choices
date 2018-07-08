@@ -31,9 +31,19 @@
     <script src="js/globals.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/room.js"></script>
+    <script src="js/questions.js"></script>
     <script src="js/main.js"></script>
 </head>
 <body>
+
+<!-- Alerts -->
+
+<div class="alerts-container w-100">
+    <div class="row my-auto">
+        <div id="alerts" class="col-lg-6 col-md-8 mx-auto">
+        </div>
+    </div>
+</div>
 
 <!-- Navigation bar -->
 
@@ -57,15 +67,6 @@
         </li>
     </ul>
 </nav>
-
-<!-- Alerts -->
-
-<div class="container">
-    <div class="row my-auto">
-        <div id="alerts" class="col-lg-6 col-md-8 mx-auto">
-        </div>
-    </div>
-</div>
 
 <!-- Loading -->
 
@@ -116,7 +117,6 @@
                 <div class="form-group">
                     <label class="h4" for="question-pack"><i class="fas fa-list"></i>&nbsp;Question pack</label>
                     <select class="form-control" id="question-pack">
-                        <option>Test question pack</option>
                     </select>
                 </div>
                 <div id="form-create-checkboxes">

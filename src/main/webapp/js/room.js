@@ -9,6 +9,16 @@ var room = {
     stats: undefined,
     locked: undefined,
 
+    precreate: function(){
+        ui.views.loading();
+        ajax.call('GET', '/questions/list', function (data) {
+            ui.views.showView('create');
+            ui.loadQuestionPacks(data);
+        }, function () {
+            ui.views.showView('menu');
+            ui.addAlert('danger','Cannot load question packs, please retry');
+        });
+    },
     set: function (tmproomid, master, pushstate) {
         this.id = tmproomid;
 
@@ -34,9 +44,10 @@ var room = {
         });
     },
     join: function (tmproomid, pushstate) {
+        ui.views.loading();
         ajax.call('POST', '/room/' + tmproomid + '/join', function () {
 
-            ui.showView('pad');
+            ui.views.showView('pad');
 
             room.set(tmproomid, false, pushstate);
         }, function (data) {
@@ -44,7 +55,7 @@ var room = {
             if (window.location.search && window.location.search.length > 0) {
                 window.history.pushState(null, "Choices", "/");
             }
-            ui.showView('menu');
+            ui.views.showView('menu');
 
             switch (data.status) {
                 case 403:
@@ -61,9 +72,9 @@ var room = {
     },
     refresh: function (data) {
         if (data.users.toString() !== this.currentMembers) {
-            ui.clearMembers();
+            ui.room.clearMembers();
             data.users.forEach(function (member) {
-                ui.addMember(member);
+                ui.room.addMember(member);
             });
         }
 
@@ -78,15 +89,15 @@ var room = {
             }
         });
 
-        ui.setLock(!data.lock);
+        ui.room.setLock(!data.lock);
 
         if (data.state !== this.currentState || data.lock !== this.locked) {
             switch (data.state) {
                 case "REGISTERING":
-                    ui.updateRoomView(
+                    ui.room.updateView(
                         this.id,
                         data.lock,
-                        ui.getRoomText(
+                        globals.getRoomText(
                             data.state,
                             data.roundCount
                         ),
@@ -94,10 +105,10 @@ var room = {
                     );
                     break;
                 case "ANSWERING":
-                    ui.updateRoomView(
+                    ui.room.updateView(
                         this.id,
                         data.lock,
-                        ui.getRoomText(
+                        globals.getRoomText(
                             data.state,
                             data.roundCount,
                             data.round,
@@ -111,7 +122,7 @@ var room = {
                     this.answers = Math.shuffle([0, 1, 2, 3]);
 
                     ['A', 'B', 'C', 'D'].forEach(function (ans) {
-                        ui.updateAnswer(
+                        ui.room.updateAnswer(
                             ans,
                             true,
                             data.question.answers[room.answers[mapping.letterToAnswer[ans] - 1]]
@@ -120,10 +131,10 @@ var room = {
                     break;
                 case "RESULTS":
                     this.stats.push([answered[correct], total]);
-                    ui.updateRoomView(
+                    ui.room.updateView(
                         this.id,
                         data.lock,
-                        ui.getRoomText(
+                        globals.getRoomText(
                             data.state,
                             data.roundCount,
                             data.round,
@@ -135,7 +146,7 @@ var room = {
                     );
 
                     ['A', 'B', 'C', 'D'].forEach(function (ans, i) {
-                        ui.updateAnswer(
+                        ui.room.updateAnswer(
                             ans,
                             i === correct - 1,
                             data.question.answers[room.answers[mapping.letterToAnswer[ans] - 1]],
@@ -145,10 +156,10 @@ var room = {
                     });
                     break;
                 case "CLOSED":
-                    ui.updateRoomView(
+                    ui.room.updateView(
                         this.id,
                         data.lock,
-                        ui.getRoomText(
+                        globals.getRoomText(
                             data.state,
                             data.roundCount
                         )
@@ -159,7 +170,7 @@ var room = {
 
         if (data.state === "ANSWERING" && total === data.users.length) {
             ['A', 'B', 'C', 'D'].forEach(function (ans) {
-                ui.updateAnswer(
+                ui.room.updateAnswer(
                     ans,
                     true,
                     data.question.answers[room.answers[mapping.letterToAnswer[ans] - 1]],
@@ -172,9 +183,9 @@ var room = {
         if (data.users.toString() !== this.currentMembers) {
             data.users.forEach(function (member) {
                 if (data.state === "RESULTS" && this.showAnswers)
-                    ui.setMemberBg(member.id, mapping.answerToColor[member.answer]);
+                    ui.room.setMemberBg(member.id, mapping.answerToColor[member.answer]);
                 else
-                    ui.setMemberBg(member.id, member.answer === 0 ? 'secondary' : 'dark');
+                    ui.room.setMemberBg(member.id, member.answer === 0 ? 'secondary' : 'dark');
             });
         }
 
@@ -184,12 +195,12 @@ var room = {
     },
     //button events
     create: function (packIndex, showAnswers, showStats, lockRoom, autoRefresh) {
-        ui.loading();
+        ui.views.loading();
         var data = {
-            pack: packIndex
+            packId: packIndex
         };
         ajax.call('PUT', '/room/create', data, function (data) {
-            ui.showView('room');
+            ui.views.showView('room');
             room.set(data.id, true, true);
             room.refresh(data);
             if (autoRefresh)
@@ -197,12 +208,12 @@ var room = {
             room.showAnswers = showAnswers;
             room.showStats = showStats;
         }, function () {
-            ui.showView('menu');
+            ui.views.showView('menu');
             ui.addAlert("danger", "Cannot create room");
         });
     },
     next: function () {
-        ui.closeHint();
+        ui.room.closeHint();
         ajax.call('POST', '/room/' + room.id + '/next', function (data) {
             room.refresh(data);
         }, function () {
@@ -224,7 +235,7 @@ var room = {
         } else {
             room.autoRefresh = setInterval(room.ajaxRefresh, 1000);
         }
-        ui.setAutoRefresh(room.autoRefresh);
+        ui.room.setAutoRefresh(room.autoRefresh);
     },
     delete: function () {
         if (window.confirm("Are you sure you want to delete the room ?")) {
@@ -238,7 +249,7 @@ var room = {
             if (window.location.search && window.location.search.length > 0) {
                 window.history.pushState(null, "Choices", "/");
             }
-            ui.showView('menu');
+            ui.views.showView('menu');
             ui.addAlert("danger", "Disconnected from room " + room.id);
         });
     },

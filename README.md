@@ -8,8 +8,6 @@ It allow you to create question-based rooms and with the room number other peopl
 * Room creation
 * Google + login
 * Mobile answering
-
-Not yet implemented :
 * Question database / customisation
 
 ## Languages / Frameworks / Libraries
@@ -33,6 +31,8 @@ Not yet implemented :
 
 First, edit the auth.clientID and auth.clientSecret in the pom.xml properties
 
+then create a `release.properties` file (located in the `WEB-INF` folder) which contains `admins={every admin's mails separated by ;}`
+
 You can launch the project with the command :
 
 ```mvn -Plocal clean jetty:run -DskipTests```
@@ -40,4 +40,3 @@ You can launch the project with the command :
 and upload it to Google App Engine with :
 
 ```mvn clean appengine:deploy -DprojectID={projectid}```
-

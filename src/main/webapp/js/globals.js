@@ -85,3 +85,18 @@ var mapping = {
         4: 'D'
     }
 };
+
+var globals = {
+    getRoomText: function (state, roundCount, round, question) {
+        switch (state) {
+            case "REGISTERING":
+                return '<i class="fas fa-spinner fa-spin"></i>&nbsp;Waiting for members...';
+            case "ANSWERING":
+                return '<small><i class="fas fa-question-circle"></i>&nbsp;Question ' + (round + 1) + '/' + roundCount + ' :</small><br/>' + question;
+            case "RESULTS":
+                return '<small><i class="fas fa-info-circle"></i>&nbsp;Question ' + (round + 1) + '/' + roundCount + ' :</small><br/>' + question;
+            case "CLOSED":
+                return '<i class="fas fa-check-circle"></i>&nbsp;Finished !';
+        }
+    }
+};

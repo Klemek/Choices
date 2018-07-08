@@ -1,3 +1,5 @@
+
+
 //check session at start
 ajax.call('GET', '/session', function (data) {
     if (data.userId) {
@@ -12,7 +14,7 @@ ajax.call('GET', '/session', function (data) {
             if (tmproomid) {
                 room.join(tmproomid);
             } else {
-                ui.showView('menu');
+                ui.views.showView('menu');
             }
         });
     } else {
