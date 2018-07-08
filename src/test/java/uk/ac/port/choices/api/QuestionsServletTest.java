@@ -4,6 +4,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
@@ -37,6 +38,13 @@ public class QuestionsServletTest {
 
     private static final String ADMINEMAIL = "adminemail";
     private QuestionPack pack;
+
+    @BeforeClass
+    public static void setUpClass() {
+        for (QuestionPack questionPack : QuestionPackDao.listQuestionPacks()) {
+            QuestionPackDao.deleteQuestionPack(questionPack);
+        }
+    }
 
     @Before
     public void setUp() {

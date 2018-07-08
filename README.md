@@ -35,7 +35,7 @@ then create a `release.properties` file (located in the `WEB-INF` folder) which 
 
 You can launch the project with the command :
 
-```mvn -Plocal clean jetty:run -DskipTests```
+```mvn -Plocal clean package jetty:run -DskipTests```
 
 and upload it to Google App Engine with :
 

@@ -16,6 +16,10 @@ public class QuestionPackDaoTest {
 
     @BeforeClass
     public static void setUp() {
+        for (QuestionPack questionPack : QuestionPackDao.listQuestionPacks()) {
+            QuestionPackDao.deleteQuestionPack(questionPack);
+        }
+
         Question question = new Question("What is 1+1", "hint", new String[]{"1", "2", "3", "4"});
         List<Question> questionList = new ArrayList<>();
         questionList.add(question);
