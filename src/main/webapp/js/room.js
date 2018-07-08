@@ -99,7 +99,8 @@ var room = {
                             data.question
                         ),
                         'See results',
-                        true
+                        true,
+                        data.hint
                     );
 
                     this.answers = Math.shuffle([0, 1, 2, 3]);
@@ -123,7 +124,8 @@ var room = {
                             data.question
                         ),
                         data.round + 1 === data.roundCount ? 'Finish' : 'Next question',
-                        true
+                        true,
+                        data.hint
                     );
 
                     ['A', 'B', 'C', 'D'].forEach(function (ans, i) {
@@ -194,6 +196,7 @@ var room = {
         });
     },
     next: function () {
+        ui.closeHint();
         ajax.call('POST', '/room/' + room.id + '/next', function (data) {
             room.refresh(data);
         }, function () {

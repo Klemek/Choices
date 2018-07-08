@@ -130,6 +130,7 @@ public class Room {
             }
             output.put("answers", answers);
             output.put("question", questions.get(round).getText());
+            output.put("hint", questions.get(round).getHint());
             output.put("round", round);
         }
 

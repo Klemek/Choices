@@ -3,7 +3,6 @@ package uk.ac.port.choices.api;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
@@ -30,25 +29,19 @@ import static org.junit.Assert.*;
 public class RoomServletTest {
 
     private Room room;
-    private static RoomDao dao;
-
-    @BeforeClass
-    public static void setUpClass() {
-        RoomServletTest.dao = new RoomDao();
-    }
 
     @Before
     public void setUp() {
         List<Question> questionList = new ArrayList<>();
-        questionList.add(new Question("What is 1+1", new String[]{"2", "1", "3", "4"}));
+        questionList.add(new Question("What is 1+1", "hint", new String[]{"2", "1", "3", "4"}));
         room = new Room(questionList, "masterid", true);
-        RoomServletTest.dao.createRoom(room);
+        RoomDao.createRoom(room);
     }
 
     @After
     public void tearDown() {
         if (room != null)
-            RoomServletTest.dao.deleteRoom(room);
+            RoomDao.deleteRoom(room);
     }
 
     @Test
@@ -81,7 +74,7 @@ public class RoomServletTest {
 
     @Test
     public void testCreateRoom() {
-        RoomServletTest.dao.deleteRoom(room);
+        RoomDao.deleteRoom(room);
 
         String userid = "userid";
         Map<String, Object> session = new HashMap<>();
@@ -103,7 +96,7 @@ public class RoomServletTest {
         assertTrue(value.has("id"));
         String simpleId = value.getString("id");
 
-        room = RoomServletTest.dao.getRoomBySimpleId(simpleId);
+        room = RoomDao.getRoomBySimpleId(simpleId);
         assertNotNull(room);
 
         assertEquals(userid, room.getMasterId());
@@ -148,7 +141,7 @@ public class RoomServletTest {
         String userid = "userid";
 
         room.getUsers().add(new User(userid, "name", "imageUrl", 0));
-        RoomServletTest.dao.updateRoom(room);
+        RoomDao.updateRoom(room);
 
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, userid);
@@ -182,7 +175,7 @@ public class RoomServletTest {
         JSONObject res = TestUtils.getResponseAsJSON(writer);
         assertEquals(200, res.getInt("code"));
 
-        room = RoomServletTest.dao.getRoomBySimpleId(room.getSimpleId());
+        room = RoomDao.getRoomBySimpleId(room.getSimpleId());
         assertEquals(1, room.getUsers().size());
         assertEquals(userid, room.getUsers().get(0).getId());
     }
@@ -190,7 +183,7 @@ public class RoomServletTest {
     @Test
     public void testJoinRoomClosed() {
         room.next();
-        RoomServletTest.dao.updateRoom(room);
+        RoomDao.updateRoom(room);
 
         String userid = "userid";
 
@@ -226,7 +219,7 @@ public class RoomServletTest {
     public void testQuitRoomUser() {
         String userid = "userid";
         room.getUsers().add(new User(userid, "name", "imageUrl", 0));
-        RoomServletTest.dao.updateRoom(room);
+        RoomDao.updateRoom(room);
 
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, userid);
@@ -239,7 +232,7 @@ public class RoomServletTest {
 
         JSONObject res = TestUtils.getResponseAsJSON(writer);
         assertEquals(200, res.getInt("code"));
-        room = RoomServletTest.dao.getRoomBySimpleId(room.getSimpleId());
+        room = RoomDao.getRoomBySimpleId(room.getSimpleId());
         assertEquals(0, room.getUsers().size());
     }
 
@@ -276,7 +269,7 @@ public class RoomServletTest {
     @Test
     public void testDeleteRoom() {
         room.getUsers().add(new User("userid", "name", "imageUrl", 0));
-        RoomServletTest.dao.updateRoom(room);
+        RoomDao.updateRoom(room);
 
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, room.getMasterId());
@@ -289,7 +282,7 @@ public class RoomServletTest {
 
         JSONObject res = TestUtils.getResponseAsJSON(writer);
         assertEquals(200, res.getInt("code"));
-        room = RoomServletTest.dao.getRoomBySimpleId(room.getSimpleId());
+        room = RoomDao.getRoomBySimpleId(room.getSimpleId());
         assertNull(room);
     }
 
@@ -297,7 +290,7 @@ public class RoomServletTest {
     public void testDeleteRoomForbidden() {
         String userid = "userid";
         room.getUsers().add(new User(userid, "name", "imageUrl", 0));
-        RoomServletTest.dao.updateRoom(room);
+        RoomDao.updateRoom(room);
 
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, userid);
@@ -316,7 +309,7 @@ public class RoomServletTest {
     public void testDeleteRoomNotFound() {
         String userid = "userid";
         room.getUsers().add(new User(userid, "name", "imageUrl", 0));
-        RoomServletTest.dao.updateRoom(room);
+        RoomDao.updateRoom(room);
 
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, userid);
@@ -335,7 +328,7 @@ public class RoomServletTest {
     public void testKickFromRoom() {
         String userid = "userid";
         room.getUsers().add(new User(userid, "name", "imageUrl", 0));
-        RoomServletTest.dao.updateRoom(room);
+        RoomDao.updateRoom(room);
 
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, room.getMasterId());
@@ -348,7 +341,7 @@ public class RoomServletTest {
 
         JSONObject res = TestUtils.getResponseAsJSON(writer);
         assertEquals(200, res.getInt("code"));
-        room = RoomServletTest.dao.getRoomBySimpleId(room.getSimpleId());
+        room = RoomDao.getRoomBySimpleId(room.getSimpleId());
         assertEquals(0, room.getUsers().size());
     }
 
@@ -356,7 +349,7 @@ public class RoomServletTest {
     public void testKickFromRoomForbidden() {
         String userid = "userid";
         room.getUsers().add(new User(userid, "name", "imageUrl", 0));
-        RoomServletTest.dao.updateRoom(room);
+        RoomDao.updateRoom(room);
 
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, userid);
@@ -408,7 +401,7 @@ public class RoomServletTest {
         String userid = "userid";
         room.getUsers().add(new User(userid, "name", "imageUrl", 0));
         room.next(); //answering
-        RoomServletTest.dao.updateRoom(room);
+        RoomDao.updateRoom(room);
         assertEquals(0, room.getUsers().get(0).getAnswer());
 
         Map<String, Object> session = new HashMap<>();
@@ -422,7 +415,7 @@ public class RoomServletTest {
 
         JSONObject res = TestUtils.getResponseAsJSON(writer);
         assertEquals(200, res.getInt("code"));
-        room = RoomServletTest.dao.getRoomBySimpleId(room.getSimpleId());
+        room = RoomDao.getRoomBySimpleId(room.getSimpleId());
         assertEquals(1, room.getUsers().get(0).getAnswer());
     }
 
@@ -431,7 +424,7 @@ public class RoomServletTest {
         String userid = "userid";
         room.getUsers().add(new User(userid, "name", "imageUrl", 0));
         room.next(); //answering
-        RoomServletTest.dao.updateRoom(room);
+        RoomDao.updateRoom(room);
         assertEquals(0, room.getUsers().get(0).getAnswer());
 
         Map<String, Object> session = new HashMap<>();
@@ -445,7 +438,7 @@ public class RoomServletTest {
 
         JSONObject res = TestUtils.getResponseAsJSON(writer);
         assertEquals(400, res.getInt("code"));
-        room = RoomServletTest.dao.getRoomBySimpleId(room.getSimpleId());
+        room = RoomDao.getRoomBySimpleId(room.getSimpleId());
         assertEquals(0, room.getUsers().get(0).getAnswer());
     }
 
@@ -477,7 +470,7 @@ public class RoomServletTest {
 
         JSONObject res = TestUtils.getResponseAsJSON(writer);
         assertEquals(200, res.getInt("code"));
-        room = RoomServletTest.dao.getRoomBySimpleId(room.getSimpleId());
+        room = RoomDao.getRoomBySimpleId(room.getSimpleId());
         assertEquals(Room.State.ANSWERING, room.getState());
     }
 
@@ -501,7 +494,7 @@ public class RoomServletTest {
         String userid = "userid";
 
         room.getUsers().add(new User(userid, "name", "imageUrl", 0));
-        RoomServletTest.dao.updateRoom(room);
+        RoomDao.updateRoom(room);
 
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, userid);

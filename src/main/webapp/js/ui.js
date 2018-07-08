@@ -113,6 +113,19 @@ var ui = {
         $("#btn-auto-refresh").click(room.changeAutoRefresh);
         $("#btn-delete").click(room.delete);
 
+        $("#hintLink").click(function(){
+            var icon = $(this).find('svg');
+            if (icon.hasClass("fa-chevron-circle-right")) {
+                icon
+                    .removeClass("fa-chevron-circle-right")
+                    .addClass("fa-chevron-circle-down");
+            } else {
+                icon
+                    .removeClass("fa-chevron-circle-down")
+                    .addClass("fa-chevron-circle-right");
+            }
+        });
+
         //pad view
         $("#btn-a").click(function () {
             room.answerQuestion(1);
@@ -127,9 +140,16 @@ var ui = {
             room.answerQuestion(4);
         });
     },
-    updateRoomView: function (id, text, btnNext, showAnswers) {
+    updateRoomView: function (id, text, btnNext, showAnswers, hint) {
         $("#room-name").text("Room " + id);
         $("#room-text").html(text);
+
+        if(hint && hint.length > 0){
+            $('#hintDiv').show();
+            $('#hint').html(hint);
+        }else{
+            $('#hintDiv').hide();
+        }
 
         if (btnNext)
             $('#btn-next').text(btnNext);
@@ -194,5 +214,11 @@ var ui = {
     },
     checkBoxValue: function (id) {
         return $('#' + id).find('svg').hasClass("fa-check-square");
+    },
+    closeHint: function(){
+        var link = $("#hintLink");
+        if(link.find('svg').hasClass("fa-chevron-circle-down")){
+            link.click();
+        }
     }
 };
