@@ -7,6 +7,7 @@ var room = {
     showAnswers: undefined,
     showStats: undefined,
     stats: undefined,
+    locked: undefined,
 
     set: function (tmproomid, master, pushstate) {
         this.id = tmproomid;
@@ -77,11 +78,14 @@ var room = {
             }
         });
 
-        if (data.state !== this.currentState) {
+        ui.setLock(!data.lock);
+
+        if (data.state !== this.currentState || data.lock !== this.locked) {
             switch (data.state) {
                 case "REGISTERING":
                     ui.updateRoomView(
                         this.id,
+                        data.lock,
                         ui.getRoomText(
                             data.state,
                             data.roundCount
@@ -92,6 +96,7 @@ var room = {
                 case "ANSWERING":
                     ui.updateRoomView(
                         this.id,
+                        data.lock,
                         ui.getRoomText(
                             data.state,
                             data.roundCount,
@@ -117,6 +122,7 @@ var room = {
                     this.stats.push([answered[correct], total]);
                     ui.updateRoomView(
                         this.id,
+                        data.lock,
                         ui.getRoomText(
                             data.state,
                             data.roundCount,
@@ -141,6 +147,7 @@ var room = {
                 case "CLOSED":
                     ui.updateRoomView(
                         this.id,
+                        data.lock,
                         ui.getRoomText(
                             data.state,
                             data.roundCount
@@ -150,7 +157,7 @@ var room = {
             }
         }
 
-        if(data.state === "ANSWERING" && total === data.users.length){
+        if (data.state === "ANSWERING" && total === data.users.length) {
             ['A', 'B', 'C', 'D'].forEach(function (ans) {
                 ui.updateAnswer(
                     ans,
@@ -171,6 +178,7 @@ var room = {
             });
         }
 
+        this.locked = data.lock;
         this.currentState = data.state;
         this.currentMembers = JSON.stringify(data.users);
     },
@@ -180,13 +188,11 @@ var room = {
         var data = {
             pack: packIndex
         };
-        if (lockRoom)
-            data.lock = true;
         ajax.call('PUT', '/room/create', data, function (data) {
             ui.showView('room');
             room.set(data.id, true, true);
             room.refresh(data);
-            if(autoRefresh)
+            if (autoRefresh)
                 room.changeAutoRefresh();
             room.showAnswers = showAnswers;
             room.showStats = showStats;
@@ -244,5 +250,12 @@ var room = {
                 ui.addAlert("warning", "Cannot kick " + memberName + ", please retry");
             });
         }
+    },
+    changeLock: function () {
+        ajax.call('POST', '/room/' + room.id + (room.locked ? '/unlock' : '/lock'), function (data) {
+            room.refresh(data);
+        }, function () {
+            ui.addAlert("warning", "Cannot " + (room.locked ? 'unlock' : 'lock') + " room, please retry");
+        });
     }
 };

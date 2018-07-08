@@ -24,10 +24,10 @@ public class Room {
     private final String masterId;
     private Room.State state;
     private final List<User> users;
-    private final boolean lock;
+    private boolean lock;
 
-    public Room(List<Question> questions, String masterId, boolean lock) {
-        this(null, Utils.getRandomString(6, "I", "l", "O", "0"), questions, 0, masterId, Room.State.REGISTERING, new ArrayList<>(), lock);
+    public Room(List<Question> questions, String masterId) {
+        this(null, Utils.getRandomString(6, "I", "l", "O", "0"), questions, 0, masterId, Room.State.REGISTERING, new ArrayList<>(), false);
     }
 
     public Room(Long id, String simpleId, List<Question> questions, int round, String masterId, Room.State state, List<User> users, boolean lock) {
@@ -73,12 +73,12 @@ public class Room {
         return simpleId;
     }
 
-    public boolean isLock() {
-        return lock;
+    public void setLock(boolean lock) {
+        this.lock = lock;
     }
 
     public boolean isLocked() {
-        return (lock && state != Room.State.REGISTERING) || state == Room.State.CLOSED;
+        return lock;
     }
 
     public void next() {
@@ -122,6 +122,7 @@ public class Room {
         output.put("users", usersArray);
         output.put("state", state.toString());
         output.put("roundCount", questions.size());
+        output.put("lock", lock);
 
         if (state == Room.State.ANSWERING || state == Room.State.RESULTS) {
             JSONArray answers = new JSONArray();

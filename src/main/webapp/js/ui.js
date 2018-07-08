@@ -111,8 +111,8 @@ var ui = {
         $("#btn-next").click(room.next);
         $("#btn-refresh").click(room.ajaxRefresh);
         $("#btn-auto-refresh").click(room.changeAutoRefresh);
+        $('#btn-lock').click(room.changeLock);
         $("#btn-delete").click(room.delete);
-
         $("#hintLink").click(function(){
             var icon = $(this).find('svg');
             if (icon.hasClass("fa-chevron-circle-right")) {
@@ -140,8 +140,8 @@ var ui = {
             room.answerQuestion(4);
         });
     },
-    updateRoomView: function (id, text, btnNext, showAnswers, hint) {
-        $("#room-name").text("Room " + id);
+    updateRoomView: function (id, lock, text, btnNext, showAnswers, hint) {
+        $("#room-name").html("Room " + id + (lock ? '&nbsp;<i class="fas fa-lock" title="room locked"></i>':''));
         $("#room-text").html(text);
 
         if(hint && hint.length > 0){
@@ -175,12 +175,15 @@ var ui = {
     },
     setAutoRefresh: function (autoRefresh) {
         if (autoRefresh) {
-            $('#btn-auto-refresh').html("<i class=\"far fa-check-square\"></i> Auto-Refresh");
-            $('#btn-refresh').hide();
+            $('#btn-auto-refresh').html("<i class=\"far fa-check-square\"></i>&nbsp;Auto-Refresh");
+            $('#btn-refresh').addClass('disabled');
         } else {
-            $('#btn-auto-refresh').html("<i class=\"far fa-square\"></i> Auto-Refresh");
-            $('#btn-refresh').show();
+            $('#btn-auto-refresh').html("<i class=\"far fa-square\"></i>&nbsp;Auto-Refresh");
+            $('#btn-refresh').removeClass('disabled');
         }
+    },
+    setLock: function (lock) {
+        $('#btn-lock').html('<i class="fas fa-lock'+(lock?'':'-open')+'"></i>&nbsp;'+(lock?'Lock':'Unlock'));
     },
     getRoomText: function (state, roundCount, round, question) {
         switch (state) {

@@ -38,6 +38,8 @@ public class RoomServlet extends HttpServlet {
             map.put("DELETE /api/room/{}/kick/{}", () -> RoomServlet.kickFromRoom(userId, request, response));
             map.put("POST /api/room/{}/answer/{}", () -> RoomServlet.answerRoomQuestion(userId, request, response));
             map.put("POST /api/room/{}/next", () -> RoomServlet.nextRoomQuestion(userId, request, response));
+            map.put("POST /api/room/{}/lock", () -> RoomServlet.lockRoom(userId, request, response, true));
+            map.put("POST /api/room/{}/unlock", () -> RoomServlet.lockRoom(userId, request, response, false));
             ServletUtils.mapRequest(request, response, map);
         } catch (Exception e) {
             Logger.log(e);
@@ -49,7 +51,7 @@ public class RoomServlet extends HttpServlet {
      * PUT /api/room/create
      */
     private static void createRoom(String userId, HttpServletRequest request, HttpServletResponse response) {
-        Map<String, String> params = ServletUtils.readParameters(request); //because of PUT request
+        // Map<String, String> params = ServletUtils.readParameters(request); //because of PUT request
 
         List<Question> questionList = new ArrayList<>();
         questionList.add(new Question("What is 1+1", "Use addition", new String[]{"2", "1", "3", "4"}));
@@ -57,9 +59,7 @@ public class RoomServlet extends HttpServlet {
         questionList.add(new Question("What is 1+2", "Use addition", new String[]{"3", "2", "1", "4"}));
         questionList.add(new Question("What is 2+2", "Use addition", new String[]{"4", "2", "3", "1"}));
 
-        boolean lock = request.getParameter("lock") != null || params.containsKey("lock");
-
-        Room room = new Room(questionList, userId, lock);
+        Room room = new Room(questionList, userId);
         RoomDao.createRoom(room);
         if (room.getId() != null) {
             ServletUtils.sendJSONResponse(response, room.toJSON());
@@ -167,6 +167,18 @@ public class RoomServlet extends HttpServlet {
         if (room == null || RoomServlet.isForbidden(response, userId, room, true))
             return;
         room.next();
+        RoomDao.updateRoom(room);
+        ServletUtils.sendJSONResponse(response, room.toJSON());
+    }
+
+    /**
+     * POST /api/room/{}/lock or unlock
+     */
+    private static void lockRoom(String userId, HttpServletRequest request, HttpServletResponse response, boolean lock) {
+        Room room = RoomServlet.getRoomFromRequest(request, response);
+        if (room == null || RoomServlet.isForbidden(response, userId, room, true))
+            return;
+        room.setLock(lock);
         RoomDao.updateRoom(room);
         ServletUtils.sendJSONResponse(response, room.toJSON());
     }

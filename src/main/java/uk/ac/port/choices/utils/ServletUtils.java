@@ -209,6 +209,9 @@ public final class ServletUtils {
         } catch (IOException e) {
             Logger.log(Level.WARNING, "Cannot open input stream on {0} request", request.getMethod());
         }
+        for (Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet())
+            if (!out.containsKey(parameter.getKey()))
+                out.put(parameter.getKey(), parameter.getValue().length > 0 ? parameter.getValue()[0] : "");
         return out;
     }
 

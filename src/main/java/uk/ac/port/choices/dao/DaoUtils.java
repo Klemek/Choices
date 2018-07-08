@@ -75,7 +75,7 @@ final class DaoUtils {
                 .set(DaoUtils.STATE, room.getState().toString())
                 .set(DaoUtils.ROUND, room.getRound())
                 .set(DaoUtils.SIMPLEID, room.getSimpleId())
-                .set(DaoUtils.LOCK, room.isLock());
+                .set(DaoUtils.LOCK, room.isLocked());
     }
 
     //endregion

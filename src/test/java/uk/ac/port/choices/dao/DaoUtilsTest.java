@@ -46,7 +46,7 @@ public class DaoUtilsTest {
                 .set(DaoUtils.STATE, DaoUtilsTest.room.getState().toString())
                 .set(DaoUtils.ROUND, DaoUtilsTest.room.getRound())
                 .set(DaoUtils.SIMPLEID, DaoUtilsTest.room.getSimpleId())
-                .set(DaoUtils.LOCK, DaoUtilsTest.room.isLock())
+                .set(DaoUtils.LOCK, DaoUtilsTest.room.isLocked())
                 .build();
 
         Room room2 = DaoUtils.entityToRoom(entity);
