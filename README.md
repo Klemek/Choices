@@ -31,6 +31,8 @@ It allow you to create question-based rooms and with the room number other peopl
 
 First, edit the auth.clientID and auth.clientSecret in the pom.xml properties
 
+(To get OAuth2 credentials go see [this page](https://cloud.google.com/java/getting-started/authenticate-users))
+
 then create a `release.properties` file (located in the `WEB-INF` folder) which contains `admins={every admin's mails separated by ;}`
 
 You can launch the project with the command :
