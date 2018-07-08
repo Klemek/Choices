@@ -17,7 +17,6 @@ public class RoomDaoTest {
 
     @BeforeClass
     public static void setUp() {
-
         List<Question> questionList = new ArrayList<>();
         questionList.add(new Question("What is 1+1", "hint", new String[]{"1", "2", "3", "4"}));
         List<User> users = new ArrayList<>();

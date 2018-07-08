@@ -4,6 +4,7 @@ import com.google.cloud.datastore.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import uk.ac.port.choices.model.Question;
+import uk.ac.port.choices.model.QuestionPack;
 import uk.ac.port.choices.model.Room;
 import uk.ac.port.choices.model.User;
 import uk.ac.port.choices.utils.Utils;
@@ -16,14 +17,17 @@ import static org.junit.Assert.assertEquals;
 public class DaoUtilsTest {
 
     private static KeyFactory roomKeyFactory;
+    private static KeyFactory questionPackKeyFactory;
     private static User user;
     private static Question question;
     private static Room room;
+    private static QuestionPack pack;
 
     @BeforeClass
     public static void setUp() {
         Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
         DaoUtilsTest.roomKeyFactory = datastore.newKeyFactory().setKind(RoomDao.KIND);
+        DaoUtilsTest.questionPackKeyFactory = datastore.newKeyFactory().setKind(QuestionPackDao.KIND);
 
         DaoUtilsTest.user = new User("id", "name", "imageUrl", 4);
         DaoUtilsTest.question = new Question("What is 1+1", "hint", new String[]{"1", "2", "3", "4"});
@@ -33,7 +37,10 @@ public class DaoUtilsTest {
         List<User> users = new ArrayList<>();
         users.add(DaoUtilsTest.user);
         DaoUtilsTest.room = new Room(1L, Utils.getRandomString(6), questionList, 5, "abcde", Room.State.ANSWERING, users, true);
+
+        DaoUtilsTest.pack = new QuestionPack(1L, "name", questionList);
     }
+
 
 
     @Test
@@ -62,6 +69,26 @@ public class DaoUtilsTest {
         Room room2 = DaoUtils.entityToRoom(entity);
         assertEquals(DaoUtilsTest.room, room2);
     }
+
+    @Test
+    public void entityToQuestionPack() {
+        Entity entity = Entity.newBuilder(DaoUtilsTest.questionPackKeyFactory.newKey(DaoUtilsTest.pack.getId()))
+                .set(QuestionPack.KEY_NAME, DaoUtilsTest.pack.getName())
+                .set(QuestionPack.KEY_QUESTIONS, DaoUtils.questionListTojsonList(DaoUtilsTest.pack.getQuestions()))
+                .build();
+
+        QuestionPack pack2 = DaoUtils.entityToQuestionPack(entity);
+        assertEquals(DaoUtilsTest.pack, pack2);
+    }
+
+    @Test
+    public void questionPackToEntityBuilder() {
+        Entity entity = (Entity) DaoUtils.questionPackToEntityBuilder(DaoUtilsTest.pack, Entity.newBuilder(DaoUtilsTest.questionPackKeyFactory.newKey(DaoUtilsTest.pack.getId()))).build();
+
+        QuestionPack pack2 = DaoUtils.entityToQuestionPack(entity);
+        assertEquals(DaoUtilsTest.pack, pack2);
+    }
+
 
     @Test
     public void jsonListToUserList() {
@@ -102,5 +129,4 @@ public class DaoUtilsTest {
         Question q2 = Question.fromJSON(lst.get(0).get());
         assertEquals(questionList.get(0), q2);
     }
-
 }

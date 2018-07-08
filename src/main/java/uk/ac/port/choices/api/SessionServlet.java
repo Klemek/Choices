@@ -4,6 +4,7 @@ import org.json.JSONObject;
 import uk.ac.port.choices.oauth2.Oauth2CallbackServlet;
 import uk.ac.port.choices.utils.Logger;
 import uk.ac.port.choices.utils.ServletUtils;
+import uk.ac.port.choices.utils.Utils;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -38,6 +39,8 @@ public class SessionServlet extends HttpServlet {
                 break;
             }
             json.put(key, request.getSession().getAttribute(key));
+            if (key.equals(Oauth2CallbackServlet.SESSION_USER_EMAIL))
+                json.put("admin", Utils.isAdmin((String) request.getSession().getAttribute(key)));
         }
 
         ServletUtils.sendJSONResponse(response, json);

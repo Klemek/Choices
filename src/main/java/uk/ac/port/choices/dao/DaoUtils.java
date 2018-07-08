@@ -2,6 +2,7 @@ package uk.ac.port.choices.dao;
 
 import com.google.cloud.datastore.*;
 import uk.ac.port.choices.model.Question;
+import uk.ac.port.choices.model.QuestionPack;
 import uk.ac.port.choices.model.Room;
 import uk.ac.port.choices.model.User;
 
@@ -30,14 +31,16 @@ final class DaoUtils {
     //region Room
 
     static Room entityToRoom(Entity entity) {
-        return new Room(entity.getKey().getId(),
+        return new Room(
+                entity.getKey().getId(),
                 entity.getString(Room.KEY_SIMPLEID),
                 DaoUtils.jsonListToQuestionList(entity.getList(Room.KEY_QUESTIONS)),
                 (int) entity.getLong(Room.KEY_ROUND),
                 entity.getString(Room.KEY_MASTERID),
                 Room.parseState(entity.getString(Room.KEY_STATE)),
                 DaoUtils.jsonListToUserList(entity.getList(Room.KEY_USERS)),
-                entity.getBoolean(Room.KEY_LOCK));
+                entity.getBoolean(Room.KEY_LOCK)
+        );
     }
 
     @SuppressWarnings("unchecked")
@@ -49,6 +52,32 @@ final class DaoUtils {
                 .set(Room.KEY_ROUND, room.getRound())
                 .set(Room.KEY_SIMPLEID, room.getSimpleId())
                 .set(Room.KEY_LOCK, room.isLocked());
+    }
+
+    //endregion
+
+    //region QuestionPack
+
+    static QuestionPack entityToQuestionPack(Entity entity) {
+        return new QuestionPack(
+                entity.getKey().getId(),
+                entity.getString(QuestionPack.KEY_NAME),
+                DaoUtils.jsonListToQuestionList(entity.getList(QuestionPack.KEY_QUESTIONS))
+        );
+    }
+
+    @SuppressWarnings("unchecked")
+    static BaseEntity.Builder questionPackToEntityBuilder(QuestionPack pack, BaseEntity.Builder builder) {
+        return builder.set(QuestionPack.KEY_NAME, pack.getName())
+                .set(QuestionPack.KEY_QUESTIONS, DaoUtils.questionListTojsonList(pack.getQuestions()));
+    }
+
+    static List<QuestionPack> entityListToQuestionPackList(QueryResults<Entity> resultList) {
+        List<QuestionPack> output = new ArrayList<>();
+        while (resultList.hasNext()) {
+            output.add(DaoUtils.entityToQuestionPack(resultList.next()));
+        }
+        return output;
     }
 
     //endregion

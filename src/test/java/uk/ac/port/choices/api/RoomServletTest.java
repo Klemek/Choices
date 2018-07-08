@@ -8,8 +8,10 @@ import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.modules.junit4.PowerMockRunner;
 import uk.ac.port.choices.TestUtils;
+import uk.ac.port.choices.dao.QuestionPackDao;
 import uk.ac.port.choices.dao.RoomDao;
 import uk.ac.port.choices.model.Question;
+import uk.ac.port.choices.model.QuestionPack;
 import uk.ac.port.choices.model.Room;
 import uk.ac.port.choices.model.User;
 import uk.ac.port.choices.oauth2.Oauth2CallbackServlet;
@@ -29,6 +31,7 @@ import static org.junit.Assert.*;
 public class RoomServletTest {
 
     private Room room;
+    private QuestionPack pack;
 
     @Before
     public void setUp() {
@@ -40,8 +43,10 @@ public class RoomServletTest {
 
     @After
     public void tearDown() {
-        if (room != null)
+        if (room != null && room.getId() != null)
             RoomDao.deleteRoom(room);
+        if (pack != null && pack.getId() != null)
+            QuestionPackDao.deleteQuestionPack(pack);
     }
 
     @Test
@@ -76,11 +81,19 @@ public class RoomServletTest {
     public void testCreateRoom() {
         RoomDao.deleteRoom(room);
 
+        Question question = new Question("What is 1+1", "hint", new String[]{"1", "2", "3", "4"});
+        List<Question> questionList = new ArrayList<>();
+        questionList.add(question);
+
+        pack = new QuestionPack("name", questionList);
+        QuestionPackDao.createQuestionPack(pack);
+
         String userid = "userid";
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, userid);
 
         Map<String, String> params = new HashMap<>();
+        params.put("packId", pack.getId().toString());
 
         StringWriter writer = new StringWriter();
         HttpServletRequest request = TestUtils.createMockRequest("PUT", "/api/room/create", params, null, session);
@@ -99,6 +112,27 @@ public class RoomServletTest {
         assertNotNull(room);
 
         assertEquals(userid, room.getMasterId());
+    }
+
+    @Test
+    public void testCreateRoomBadRequest() {
+        RoomDao.deleteRoom(room);
+
+        String userid = "userid";
+        Map<String, Object> session = new HashMap<>();
+        session.put(Oauth2CallbackServlet.SESSION_USER_ID, userid);
+
+        Map<String, String> params = new HashMap<>();
+        params.put("packId", "1234");
+
+        StringWriter writer = new StringWriter();
+        HttpServletRequest request = TestUtils.createMockRequest("PUT", "/api/room/create", params, null, session);
+        HttpServletResponse response = TestUtils.createMockResponse(writer);
+
+        new RoomServlet().service(request, response);
+
+        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        assertEquals(400, res.getInt("code"));
     }
 
     @Test

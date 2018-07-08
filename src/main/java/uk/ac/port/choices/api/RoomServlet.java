@@ -1,8 +1,9 @@
 package uk.ac.port.choices.api;
 
 import fr.klemek.betterlists.BetterArrayList;
+import uk.ac.port.choices.dao.QuestionPackDao;
 import uk.ac.port.choices.dao.RoomDao;
-import uk.ac.port.choices.model.Question;
+import uk.ac.port.choices.model.QuestionPack;
 import uk.ac.port.choices.model.Room;
 import uk.ac.port.choices.model.User;
 import uk.ac.port.choices.utils.Logger;
@@ -13,9 +14,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 @WebServlet("/api/room/*")
@@ -26,7 +25,7 @@ public class RoomServlet extends HttpServlet {
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) {
         try {
-            String userId = RoomServlet.getUser(request, response);
+            String userId = ServletUtils.getUser(request, response);
             if (userId == null)
                 return;
             Map<String, Runnable> map = new LinkedHashMap<>();
@@ -51,15 +50,17 @@ public class RoomServlet extends HttpServlet {
      * PUT /api/room/create
      */
     private static void createRoom(String userId, HttpServletRequest request, HttpServletResponse response) {
-        // Map<String, String> params = ServletUtils.readParameters(request); //because of PUT request
+        Map<String, String> params = ServletUtils.readParameters(request); //because of PUT request
 
-        List<Question> questionList = new ArrayList<>();
-        questionList.add(new Question("What is 1+1", "Use addition", new String[]{"2", "1", "3", "4"}));
-        questionList.add(new Question("What is 2*2", "Use multiplication", new String[]{"4", "2", "3", "1"}));
-        questionList.add(new Question("What is 1+2", "Use addition", new String[]{"3", "2", "1", "4"}));
-        questionList.add(new Question("What is 2+2", "Use addition", new String[]{"4", "2", "3", "1"}));
+        Long packId = Utils.stringToLong(params.get("packId"));
+        QuestionPack pack = packId == null ? null : QuestionPackDao.getQuestionPackById(packId);
 
-        Room room = new Room(questionList, userId);
+        if (pack == null) {
+            ServletUtils.sendError(response, HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
+        Room room = new Room(pack.getQuestions(), userId);
         RoomDao.createRoom(room);
         if (room.getId() != null) {
             ServletUtils.sendJSONResponse(response, room.toJSON());
@@ -72,7 +73,7 @@ public class RoomServlet extends HttpServlet {
      * GET /api/room/{}
      */
     private static void getRoomInfo(String userId, HttpServletRequest request, HttpServletResponse response) {
-        Room room = RoomServlet.getRoomFromRequest(request, response);
+        Room room = ServletUtils.getRoomFromRequest(request, response);
         if (room == null || RoomServlet.isForbidden(response, userId, room, true))
             return;
         ServletUtils.sendJSONResponse(response, room.toJSON());
@@ -82,7 +83,7 @@ public class RoomServlet extends HttpServlet {
      * POST /api/room/{}/join
      */
     private static void joinRoom(HttpServletRequest request, HttpServletResponse response) {
-        Room room = RoomServlet.getRoomFromRequest(request, response);
+        Room room = ServletUtils.getRoomFromRequest(request, response);
         if (room == null)
             return;
         if (room.isLocked()) {
@@ -101,7 +102,7 @@ public class RoomServlet extends HttpServlet {
      * DELETE /api/room/{}/quit
      */
     private static void quitRoom(String userId, HttpServletRequest request, HttpServletResponse response) {
-        Room room = RoomServlet.getRoomFromRequest(request, response);
+        Room room = ServletUtils.getRoomFromRequest(request, response);
         if (room == null || RoomServlet.isForbidden(response, userId, room, false))
             return;
         User u = RoomServlet.getUser(request);
@@ -116,7 +117,7 @@ public class RoomServlet extends HttpServlet {
      * DELETE /api/room/{}/delete
      */
     private static void deleteRoom(String userId, HttpServletRequest request, HttpServletResponse response) {
-        Room room = RoomServlet.getRoomFromRequest(request, response);
+        Room room = ServletUtils.getRoomFromRequest(request, response);
         if (room == null || RoomServlet.isForbidden(response, userId, room, true))
             return;
         RoomDao.deleteRoom(room);
@@ -127,7 +128,7 @@ public class RoomServlet extends HttpServlet {
      * DELETE /api/room/{}/kick/{}
      */
     private static void kickFromRoom(String userId, HttpServletRequest request, HttpServletResponse response) {
-        Room room = RoomServlet.getRoomFromRequest(request, response);
+        Room room = ServletUtils.getRoomFromRequest(request, response);
         if (room == null || RoomServlet.isForbidden(response, userId, room, true))
             return;
         String[] path = request.getRequestURI().split("/");
@@ -143,7 +144,7 @@ public class RoomServlet extends HttpServlet {
      * POST /api/room/{}/answer/{}
      */
     private static void answerRoomQuestion(String userId, HttpServletRequest request, HttpServletResponse response) {
-        Room room = RoomServlet.getRoomFromRequest(request, response);
+        Room room = ServletUtils.getRoomFromRequest(request, response);
         if (room == null || RoomServlet.isForbidden(response, userId, room, false))
             return;
         if (room.getState() == Room.State.ANSWERING) {
@@ -163,7 +164,7 @@ public class RoomServlet extends HttpServlet {
      * POST /api/room/{}/next
      */
     private static void nextRoomQuestion(String userId, HttpServletRequest request, HttpServletResponse response) {
-        Room room = RoomServlet.getRoomFromRequest(request, response);
+        Room room = ServletUtils.getRoomFromRequest(request, response);
         if (room == null || RoomServlet.isForbidden(response, userId, room, true))
             return;
         room.next();
@@ -175,7 +176,7 @@ public class RoomServlet extends HttpServlet {
      * POST /api/room/{}/lock or unlock
      */
     private static void lockRoom(String userId, HttpServletRequest request, HttpServletResponse response, boolean lock) {
-        Room room = RoomServlet.getRoomFromRequest(request, response);
+        Room room = ServletUtils.getRoomFromRequest(request, response);
         if (room == null || RoomServlet.isForbidden(response, userId, room, true))
             return;
         room.setLock(lock);
@@ -183,27 +184,12 @@ public class RoomServlet extends HttpServlet {
         ServletUtils.sendJSONResponse(response, room.toJSON());
     }
 
-    private static String getUser(HttpServletRequest request, HttpServletResponse response) {
-        String userId = (String) request.getSession().getAttribute("userId");
-        if (userId == null)
-            ServletUtils.sendError(response, HttpServletResponse.SC_UNAUTHORIZED);
-        return userId;
-    }
 
     private static User getUser(HttpServletRequest request) {
         String id = (String) request.getSession().getAttribute("userId");
         String imageUrl = (String) request.getSession().getAttribute("userImageUrl");
         String name = (String) request.getSession().getAttribute("userName");
         return new User(id, name, imageUrl);
-    }
-
-    private static Room getRoomFromRequest(HttpServletRequest request, HttpServletResponse response) {
-        String[] path = request.getRequestURI().split("/");
-        String simpleId = path[3];
-        Room room = RoomDao.getRoomBySimpleId(simpleId);
-        if (room == null)
-            ServletUtils.sendError(response, HttpServletResponse.SC_NOT_FOUND);
-        return room;
     }
 
     private static boolean isForbidden(HttpServletResponse response, String userId, Room room, boolean master) {

@@ -1,12 +1,13 @@
 package uk.ac.port.choices.utils;
 
+import fr.klemek.betterlists.BetterArrayList;
+import fr.klemek.betterlists.BetterList;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.Level;
 
 /**
  * Utility class that store useful misc functions.
@@ -15,8 +16,32 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class Utils {
 
+    private static final ResourceBundle RELEASE_BUNDLE = ResourceBundle.getBundle("release");
 
     private Utils() {
+    }
+
+    /**
+     * Get a configuration string by its key.
+     *
+     * @param key the key in the config file
+     * @return the string or null if not found
+     */
+    private static String getString(String key) {
+        try {
+            return Utils.RELEASE_BUNDLE.getString(key);
+        } catch (MissingResourceException e) {
+            Logger.log(Level.SEVERE, "Missing configuration string {0}", key);
+            return null;
+        }
+    }
+
+    public static boolean isAdmin(String email) {
+        String admins = Utils.getString("admins");
+        if (admins == null)
+            return false;
+        BetterList<String> configAdmins = new BetterArrayList<>(Arrays.asList(admins.split(";")));
+        return configAdmins.any(admin -> admin.equals(email));
     }
 
     /*
@@ -101,6 +126,14 @@ public final class Utils {
         }
     }
 
+    public static Long stringToLong(String text) {
+        try {
+            return Long.parseLong(text);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
 
     /**
      * Return the class name from the calling class in th stack trace.
@@ -143,20 +176,4 @@ public final class Utils {
         return s1.toLowerCase().contains(s2.toLowerCase());
     }
 
-    /**
-     * Navigate through a JSONObject by keys
-     *
-     * @param source the original JSONObject
-     * @param keys   the keys to find successively
-     * @return the found JSONObject or null if the key was not found
-     */
-    public static JSONObject navigateJSON(JSONObject source, String... keys) {
-        JSONObject obj = source;
-        for (String key : keys) {
-            if (!obj.has(key))
-                return null;
-            obj = obj.getJSONObject(key);
-        }
-        return obj;
-    }
 }

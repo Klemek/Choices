@@ -2,6 +2,11 @@ package uk.ac.port.choices.utils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import uk.ac.port.choices.dao.QuestionPackDao;
+import uk.ac.port.choices.dao.RoomDao;
+import uk.ac.port.choices.model.QuestionPack;
+import uk.ac.port.choices.model.Room;
+import uk.ac.port.choices.oauth2.Oauth2CallbackServlet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -212,6 +217,9 @@ public final class ServletUtils {
         for (Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet())
             if (!out.containsKey(parameter.getKey()))
                 out.put(parameter.getKey(), parameter.getValue().length > 0 ? parameter.getValue()[0] : "");
+
+        ServletUtils.currentRequests.put(Thread.currentThread().getId(), ServletUtils.requestToJSON(request, out).toString());
+
         return out;
     }
 
@@ -221,6 +229,15 @@ public final class ServletUtils {
             if (param.getValue().length > 0)
                 params.put(param.getKey(), param.getValue()[0]);
 
+        JSONObject json = new JSONObject();
+        json.put("requested", request.getRequestURI());
+        json.put("method", request.getMethod());
+        json.put("params", params);
+
+        return json;
+    }
+
+    private static JSONObject requestToJSON(HttpServletRequest request, Map<String, String> params) {
         JSONObject json = new JSONObject();
         json.put("requested", request.getRequestURI());
         json.put("method", request.getMethod());
@@ -253,5 +270,35 @@ public final class ServletUtils {
             if (!refPath[i].startsWith("{") && !srcPath[i].equals(refPath[i]))
                 return false;
         return true;
+    }
+
+    public static String getUser(HttpServletRequest request, HttpServletResponse response) {
+        String userId = (String) request.getSession().getAttribute(Oauth2CallbackServlet.SESSION_USER_ID);
+        if (userId == null)
+            ServletUtils.sendError(response, HttpServletResponse.SC_UNAUTHORIZED);
+        return userId;
+    }
+
+    public static boolean isUserAdmin(HttpServletRequest request) {
+        String userEmail = (String) request.getSession().getAttribute(Oauth2CallbackServlet.SESSION_USER_EMAIL);
+        return userEmail != null && Utils.isAdmin(userEmail);
+    }
+
+    public static Room getRoomFromRequest(HttpServletRequest request, HttpServletResponse response) {
+        String[] path = request.getRequestURI().split("/");
+        String simpleId = path[3];
+        Room room = RoomDao.getRoomBySimpleId(simpleId);
+        if (room == null)
+            ServletUtils.sendError(response, HttpServletResponse.SC_NOT_FOUND);
+        return room;
+    }
+
+    public static QuestionPack getQuestionPackFromRequest(HttpServletRequest request, HttpServletResponse response) {
+        String[] path = request.getRequestURI().split("/");
+        Long id = Utils.stringToLong(path[3]);
+        QuestionPack pack = id == null ? null : QuestionPackDao.getQuestionPackById(id);
+        if (pack == null)
+            ServletUtils.sendError(response, HttpServletResponse.SC_NOT_FOUND);
+        return pack;
     }
 }
