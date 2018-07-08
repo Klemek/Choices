@@ -35,7 +35,7 @@ public class RoomDao {
     public static Room getRoomBySimpleId(String simpleId) {
         Query<Entity> query = Query.newEntityQueryBuilder()
                 .setKind(RoomDao.KIND)
-                .setFilter(StructuredQuery.PropertyFilter.eq(DaoUtils.SIMPLEID, simpleId))
+                .setFilter(StructuredQuery.PropertyFilter.eq(Room.SIMPLEID, simpleId))
                 .setLimit(1)
                 .build();
         QueryResults<Entity> room = DaoUtils.getDatastore().run(query);

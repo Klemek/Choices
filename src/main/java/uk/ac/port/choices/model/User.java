@@ -1,10 +1,21 @@
 package uk.ac.port.choices.model;
 
+import org.json.JSONException;
 import org.json.JSONObject;
+import uk.ac.port.choices.utils.Logger;
 
 import java.util.Objects;
 
 public class User {
+
+    //region keys
+
+    public static final String ID = "id";
+    public static final String NAME = "name";
+    public static final String IMAGEURL = "imageUrl";
+    public static final String ANSWER = "answer";
+
+    //endregion
 
     private final String id;
     private final String name;
@@ -46,13 +57,28 @@ public class User {
         this.answer = answer;
     }
 
-    JSONObject toJSON(){
+    public JSONObject toJSON() {
         JSONObject output = new JSONObject();
-        output.put("id", id);
-        output.put("name",name);
-        output.put("imageUrl",imageUrl);
-        output.put("answer", answer);
+        output.put(User.ID, id);
+        output.put(User.NAME, name);
+        output.put(User.IMAGEURL, imageUrl);
+        output.put(User.ANSWER, answer);
         return output;
+    }
+
+    public static User fromJSON(String strJSON) {
+        try {
+            JSONObject json = new JSONObject(strJSON);
+            return new User(
+                    json.getString(User.ID),
+                    json.getString(User.NAME),
+                    json.getString(User.IMAGEURL),
+                    json.getInt(User.ANSWER)
+            );
+        } catch (JSONException e) {
+            Logger.log(e);
+            return null;
+        }
     }
 
     @Override

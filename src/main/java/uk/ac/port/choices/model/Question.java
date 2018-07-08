@@ -1,9 +1,23 @@
 package uk.ac.port.choices.model;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import uk.ac.port.choices.utils.Logger;
+import uk.ac.port.choices.utils.Utils;
+
 import java.util.Arrays;
 import java.util.Objects;
 
 public class Question {
+
+    //region Keys
+
+    static final String TEXT = "text";
+    static final String HINT = "hint";
+    static final String ANSWERS = "answers";
+
+    //endregion
 
     private final String text;
     private final String hint;
@@ -34,6 +48,28 @@ public class Question {
                 ", hint='" + hint + '\'' +
                 ", answers=" + Arrays.toString(answers) +
                 '}';
+    }
+
+    public JSONObject toJSON() {
+        JSONObject output = new JSONObject();
+        output.put(Question.TEXT, text);
+        output.put(Question.HINT, hint);
+        output.put(Question.ANSWERS, new JSONArray(answers));
+        return output;
+    }
+
+    public static Question fromJSON(String strJSON) {
+        try {
+            JSONObject json = new JSONObject(strJSON);
+            return new Question(
+                    json.getString(Question.TEXT),
+                    json.getString(Question.HINT),
+                    Utils.jArrayToStringList(json.getJSONArray(Question.ANSWERS)).toArray(new String[0])
+            );
+        } catch (JSONException e) {
+            Logger.log(e);
+            return null;
+        }
     }
 
     @Override

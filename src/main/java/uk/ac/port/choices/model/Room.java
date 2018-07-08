@@ -1,5 +1,6 @@
 package uk.ac.port.choices.model;
 
+import fr.klemek.betterlists.BetterArrayList;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import uk.ac.port.choices.utils.Utils;
@@ -9,6 +10,26 @@ import java.util.List;
 import java.util.Objects;
 
 public class Room {
+
+    //region Keys
+
+    //Entity
+
+    public static final String QUESTIONS = "questions";
+    public static final String ROUND = "round";
+    public static final String MASTERID = "masterid";
+    public static final String STATE = "state";
+    public static final String USERS = "users";
+    public static final String SIMPLEID = "simpleId";
+    public static final String LOCK = "lock";
+
+    //JSON
+
+    static final String ID = "id";
+    static final String QUESTION = "question";
+    static final String ROUND_COUNT = "roundCount";
+
+    //endregion
 
     public enum State {
         REGISTERING,
@@ -113,26 +134,16 @@ public class Room {
 
     public JSONObject toJSON() {
         JSONObject output = new JSONObject();
-        output.put("id", simpleId);
+        output.put(Room.ID, simpleId);
 
-        JSONArray usersArray = new JSONArray();
-        for (User u : users) {
-            usersArray.put(u.toJSON());
-        }
-        output.put("users", usersArray);
-        output.put("state", state.toString());
-        output.put("roundCount", questions.size());
-        output.put("lock", lock);
+        output.put(Room.USERS, new JSONArray(BetterArrayList.fromList(users).select(User::toJSON)));
+        output.put(Room.STATE, state.toString());
+        output.put(Room.ROUND_COUNT, questions.size());
+        output.put(Room.LOCK, lock);
 
         if (state == Room.State.ANSWERING || state == Room.State.RESULTS) {
-            JSONArray answers = new JSONArray();
-            for (String answer : questions.get(round).getAnswers()) {
-                answers.put(answer);
-            }
-            output.put("answers", answers);
-            output.put("question", questions.get(round).getText());
-            output.put("hint", questions.get(round).getHint());
-            output.put("round", round);
+            output.put(Room.QUESTION, questions.get(round).toJSON());
+            output.put(Room.ROUND, round);
         }
 
         return output;

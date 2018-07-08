@@ -80,6 +80,13 @@ public final class Utils {
         return lst;
     }
 
+    public static List<String> jArrayToStringList(JSONArray src) {
+        List<String> lst = new ArrayList<>(src.length());
+        for (int i = 0; i < src.length(); i++)
+            lst.add(src.getString(i));
+        return lst;
+    }
+
     /**
      * Convert a string to an Integer.
      *

@@ -101,11 +101,11 @@ var room = {
                             data.state,
                             data.roundCount,
                             data.round,
-                            data.question
+                            data.question.text
                         ),
                         'See results',
                         true,
-                        data.hint
+                        data.question.hint
                     );
 
                     this.answers = Math.shuffle([0, 1, 2, 3]);
@@ -114,7 +114,7 @@ var room = {
                         ui.updateAnswer(
                             ans,
                             true,
-                            data.answers[room.answers[mapping.letterToAnswer[ans] - 1]]
+                            data.question.answers[room.answers[mapping.letterToAnswer[ans] - 1]]
                         );
                     });
                     break;
@@ -127,18 +127,18 @@ var room = {
                             data.state,
                             data.roundCount,
                             data.round,
-                            data.question
+                            data.question.text
                         ),
                         data.round + 1 === data.roundCount ? 'Finish' : 'Next question',
                         true,
-                        data.hint
+                        data.question.hint
                     );
 
                     ['A', 'B', 'C', 'D'].forEach(function (ans, i) {
                         ui.updateAnswer(
                             ans,
                             i === correct - 1,
-                            data.answers[room.answers[mapping.letterToAnswer[ans] - 1]],
+                            data.question.answers[room.answers[mapping.letterToAnswer[ans] - 1]],
                             room.showStats ? answered[mapping.letterToAnswer[ans]] : undefined,
                             room.showStats ? total : undefined
                         );
@@ -162,7 +162,7 @@ var room = {
                 ui.updateAnswer(
                     ans,
                     true,
-                    data.answers[room.answers[mapping.letterToAnswer[ans] - 1]],
+                    data.question.answers[room.answers[mapping.letterToAnswer[ans] - 1]],
                     room.showStats ? answered[mapping.letterToAnswer[ans]] : undefined,
                     room.showStats ? total : undefined
                 );

@@ -1,7 +1,6 @@
 package uk.ac.port.choices.dao;
 
 import com.google.cloud.datastore.*;
-import org.json.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import uk.ac.port.choices.model.Question;
@@ -40,13 +39,13 @@ public class DaoUtilsTest {
     @Test
     public void entityToRoom() {
         Entity entity = Entity.newBuilder(DaoUtilsTest.roomKeyFactory.newKey(DaoUtilsTest.room.getId()))
-                .set(DaoUtils.USERS, DaoUtils.userListToJsonList(DaoUtilsTest.room.getUsers()))
-                .set(DaoUtils.QUESTIONS, DaoUtils.questionListTojsonList(DaoUtilsTest.room.getQuestions()))
-                .set(DaoUtils.MASTERID, DaoUtilsTest.room.getMasterId())
-                .set(DaoUtils.STATE, DaoUtilsTest.room.getState().toString())
-                .set(DaoUtils.ROUND, DaoUtilsTest.room.getRound())
-                .set(DaoUtils.SIMPLEID, DaoUtilsTest.room.getSimpleId())
-                .set(DaoUtils.LOCK, DaoUtilsTest.room.isLocked())
+                .set(Room.USERS, DaoUtils.userListToJsonList(DaoUtilsTest.room.getUsers()))
+                .set(Room.QUESTIONS, DaoUtils.questionListTojsonList(DaoUtilsTest.room.getQuestions()))
+                .set(Room.MASTERID, DaoUtilsTest.room.getMasterId())
+                .set(Room.STATE, DaoUtilsTest.room.getState().toString())
+                .set(Room.ROUND, DaoUtilsTest.room.getRound())
+                .set(Room.SIMPLEID, DaoUtilsTest.room.getSimpleId())
+                .set(Room.LOCK, DaoUtilsTest.room.isLocked())
                 .build();
 
         Room room2 = DaoUtils.entityToRoom(entity);
@@ -65,31 +64,9 @@ public class DaoUtilsTest {
     }
 
     @Test
-    public void userToJson() {
-        String str = DaoUtils.userToJson(DaoUtilsTest.user).get();
-        JSONObject json = new JSONObject(str);
-
-        assertEquals(DaoUtilsTest.user.getId(), json.getString(DaoUtils.ID));
-        assertEquals(DaoUtilsTest.user.getImageUrl(), json.getString(DaoUtils.IMAGEURL));
-        assertEquals(DaoUtilsTest.user.getName(), json.getString(DaoUtils.NAME));
-        assertEquals(DaoUtilsTest.user.getAnswer(), json.getInt(DaoUtils.ANSWER));
-    }
-
-    @Test
-    public void jsonToUser() {
-        StringValue str = DaoUtils.userToJson(DaoUtilsTest.user);
-        User u2 = DaoUtils.jsonToUser(str);
-
-        assertEquals(DaoUtilsTest.user, u2);
-        assertEquals(DaoUtilsTest.user.getAnswer(), u2.getAnswer());
-        assertEquals(DaoUtilsTest.user.getName(), u2.getName());
-        assertEquals(DaoUtilsTest.user.getImageUrl(), u2.getImageUrl());
-    }
-
-    @Test
     public void jsonListToUserList() {
         List<StringValue> lst = new ArrayList<>();
-        lst.add(DaoUtils.userToJson(DaoUtilsTest.user));
+        lst.add(DaoUtils.getStringValue(DaoUtilsTest.user.toJSON()));
 
         List<User> users = DaoUtils.jsonListToUserList(lst);
         assertEquals(1, users.size());
@@ -102,33 +79,14 @@ public class DaoUtilsTest {
         users.add(DaoUtilsTest.user);
         List<StringValue> lst = DaoUtils.userListToJsonList(users);
         assertEquals(1, lst.size());
-        User u2 = DaoUtils.jsonToUser(lst.get(0));
+        User u2 = User.fromJSON(lst.get(0).get());
         assertEquals(users.get(0), u2);
-    }
-
-    @Test
-    public void questionToJson() {
-        String str = DaoUtils.questionToJson(DaoUtilsTest.question).get();
-        JSONObject json = new JSONObject(str);
-
-        assertEquals(DaoUtilsTest.question.getText(), json.getString(DaoUtils.TEXT));
-        assertEquals(DaoUtilsTest.question.getHint(), json.getString(DaoUtils.HINT));
-        assertEquals(DaoUtilsTest.question.getAnswers().length, json.getJSONArray(DaoUtils.ANSWERS).length());
-        assertEquals(DaoUtilsTest.question.getAnswers()[0], json.getJSONArray(DaoUtils.ANSWERS).getString(0));
-    }
-
-    @Test
-    public void jsonToQuestion() {
-        StringValue str = DaoUtils.questionToJson(DaoUtilsTest.question);
-        Question q2 = DaoUtils.jsonToQuestion(str);
-
-        assertEquals(DaoUtilsTest.question, q2);
     }
 
     @Test
     public void jsonListToQuestionList() {
         List<StringValue> lst = new ArrayList<>();
-        lst.add(DaoUtils.questionToJson(DaoUtilsTest.question));
+        lst.add(DaoUtils.getStringValue(DaoUtilsTest.question.toJSON()));
 
         List<Question> questions = DaoUtils.jsonListToQuestionList(lst);
         assertEquals(1, questions.size());
@@ -141,7 +99,7 @@ public class DaoUtilsTest {
         questionList.add(DaoUtilsTest.question);
         List<StringValue> lst = DaoUtils.questionListTojsonList(questionList);
         assertEquals(1, lst.size());
-        Question q2 = DaoUtils.jsonToQuestion(lst.get(0));
+        Question q2 = Question.fromJSON(lst.get(0).get());
         assertEquals(questionList.get(0), q2);
     }
 
