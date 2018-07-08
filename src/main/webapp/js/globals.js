@@ -57,6 +57,10 @@ Math.shuffle = function (a) {
     return a;
 };
 
+Math.randInt = function(min, max) {
+    return Math.floor(Math.random() * (max - min) ) + min;
+};
+
 var mapping = {
     answerToColor: {
         0: 'secondary',

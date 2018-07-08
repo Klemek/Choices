@@ -88,8 +88,11 @@
                 <h1 class="text-center"><i class="fas fa-dice"></i>&nbsp;Choices</h1>
                 <br/>
                 <div class="row">
-                    <div id="div-create-room" class="col-6 h-100">
+                    <div id="div-create-room" class="col-6 h-100 my-auto">
                         <button id="btn-new" class="btn btn-primary btn-block">Create room</button>
+                        <button id="btn-questions" style="display:none" class="btn btn-primary btn-block">Edit
+                            questions
+                        </button>
                     </div>
                     <div id="div-join-room" class="col-6">
                         <input placeholder="Enter room ID" type="text" class="form-control"
@@ -160,9 +163,8 @@
                             <i class="fas fa-chevron-circle-right"></i>&nbsp;Hint
                         </a>
                     </div>
-                    <div id="collapseHint" class="collapse" data-parent="#accordion">
+                    <div id="collapseHint" class="collapse" data-parent="#hintDiv">
                         <div id="hint" class="card-body">
-
                         </div>
                     </div>
                 </div>
@@ -199,6 +201,29 @@
             </div>
         </div>
         <br/>
+    </div>
+</div>
+
+<!-- Questions View -->
+
+<div id="questions-view" style="display:none" class="container">
+    <div class="row my-auto">
+        <div class="col-md-10 mx-auto">
+            <div class="jumbotron">
+                <h1 class="text-center"><i class="fas fa-edit"></i>&nbsp;Edit questions</h1>
+                <br/>
+                <div id="packs">
+                </div>
+                <br/>
+                <div class="row">
+                    <div class="col-6 offset-3">
+                        <button id="btn-create-pack" class="btn btn-success btn-block">
+                            <i class="fas fa-plus"></i>&nbsp;New question pack
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
