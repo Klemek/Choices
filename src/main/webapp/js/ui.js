@@ -190,8 +190,23 @@ var ui = {
                 html = percent + '% ' + html;
             }
             $('#answer-' + ans)
-                .attr("class", "btn btn-" + (plain ? '' : 'outline-') + mapping.letterToColor(ans) + " btn-block btn-lg")
+                .attr("class", "btn btn-" + (plain ? '' : 'outline-') + mapping.letterToColor(ans) + " btn-block btn-lg h-100")
                 .html(html);
+        },
+        fitAnswers: function(){
+            setTimeout(function(){
+                var height = 0;
+                $('.answer').each(function(){
+                    if($(this).height()>height){
+                        height = $(this).height();
+                    }
+                });
+                if(height){
+                    $('.answer').each(function(){
+                        $(this).height(height);
+                    });
+                }
+            });
         },
         setAutoRefresh: function (autoRefresh) {
             if (autoRefresh) {
@@ -212,7 +227,8 @@ var ui = {
             member.imageUrl = member.imageUrl.split('sz=')[0];
             var html = '' +
                 '<div id="' + member.id + '" class="col-4" title="kick ' + member.name + '">' +
-                '<div class="jumbotron bg-dark member-card text-center text-white">' +
+                '<div class="jumbotron h-100 bg-dark member-card text-center text-white">' +
+                '<div class="text-danger btn-kick"><i class="fas fa-times"></i></div>' +
                 '<img class="rounded-circle" src="' + member.imageUrl + 'sz=42"/>' +
                 '<h4><small>' + member.name + '</small></h4>' +
                 '</div></div>';
@@ -367,10 +383,10 @@ var ui = {
                 '<div class="card-body">' +
                 '<h3 class="text-center"></h3>' +
                 '<div class="row">' +
-                '<div class="col-6 answer"><div class="btn btn-danger btn-block btn-lg"></div></div>' +
-                '<div class="col-6 answer"><div class="btn btn-success btn-block btn-lg"></div></div>' +
-                '<div class="col-6 answer"><div class="btn btn-info btn-block btn-lg"></div></div>' +
-                '<div class="col-6 answer"><div class="btn btn-warning btn-block btn-lg"></div></div>' +
+                '<div class="col-6 answer"><div class="btn btn-danger btn-block btn-lg h-100"></div></div>' +
+                '<div class="col-6 answer"><div class="btn btn-success btn-block btn-lg h-100"></div></div>' +
+                '<div class="col-6 answer"><div class="btn btn-info btn-block btn-lg h-100"></div></div>' +
+                '<div class="col-6 answer"><div class="btn btn-warning btn-block btn-lg h-100"></div></div>' +
                 '</div>' +
                 '<div class="card text-left">' +
                 '<div class="card-header"><a class="card-link" data-toggle="collapse"><i class="fas fa-chevron-circle-down"></i>&nbsp;Hint</a></div>' +
@@ -419,6 +435,19 @@ var ui = {
                     preview.find('.btn-info').html('C : ' + answers[2]);
                     preview.find('.btn-warning').html('D : ' + answers[3]);
                     $(preview.find('.card-body')[1]).html(hint);
+                    setTimeout(function(){
+                        var height = 0;
+                        preview.find('.answer').each(function(){
+                            if($(this).height()>height){
+                                height = $(this).height();
+                            }
+                        });
+                        if(height){
+                            preview.find('.answer').each(function(){
+                                $(this).height(height);
+                            });
+                        }
+                    });
                 }
             });
 

@@ -33,7 +33,7 @@ var questions = {
             questions:JSON.stringify(qs)
         };
 
-        if(packId.indexOf('tmp') === 0){
+        if((''+packId).indexOf('tmp') === 0){
             ajax.call('PUT', '/questions/create', data, function (pack) {
                 ui.questions.removePack(packId);
                 ui.questions.addPack(pack.id, pack.name, pack.questions);

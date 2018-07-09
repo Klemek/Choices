@@ -128,6 +128,7 @@ var room = {
                             data.question.answers[room.answers[mapping.letterToAnswer[ans] - 1]]
                         );
                     });
+                    ui.room.fitAnswers();
                     break;
                 case "RESULTS":
                     this.stats.push([answered[correct], total]);
@@ -154,6 +155,7 @@ var room = {
                             room.showStats ? total : undefined
                         );
                     });
+                    ui.room.fitAnswers();
                     break;
                 case "CLOSED":
                     ui.room.updateView(
