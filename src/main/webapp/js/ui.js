@@ -10,7 +10,7 @@ var ui = {
 
             //populate room creation window
             ui.checkbox.create('#form-create-checkboxes', 'cbAnswers', false, 'Show user\'s answers');
-            ui.checkbox.create('#form-create-checkboxes', 'cbStats', true, 'Show statistics');
+            ui.checkbox.create('#form-create-checkboxes', 'cbStats', true, 'Always show statistics');
             ui.checkbox.create('#form-create-checkboxes', 'cbLock', false, 'Lock room at start');
             ui.checkbox.create('#form-create-checkboxes', 'cbRefresh', true, 'Automatically refresh content');
         }
@@ -78,6 +78,7 @@ var ui = {
         $("#btn-refresh").click(room.ajaxRefresh);
         $("#btn-auto-refresh").click(room.changeAutoRefresh);
         $('#btn-lock').click(room.changeLock);
+        $('#btn-stats').click(room.changeStats);
         $("#btn-delete").click(room.delete);
 
         //questions view
@@ -180,8 +181,6 @@ var ui = {
                 $("#answers").show();
             else
                 $("#answers").hide();
-
-
         },
         updateAnswer: function (ans, plain, text, answered, total) {
             var html = ans + " : " + text;
@@ -220,6 +219,15 @@ var ui = {
         setLock: function (lock) {
             $('#btn-lock').html('<i class="fas fa-lock' + (lock ? '' : '-open') + '"></i>&nbsp;' + (lock ? 'Lock' : 'Unlock'));
         },
+        setStats: function(stats){
+            $('#btn-stats').html('<i class="fas fa-eye'+(stats?'':'-slash')+'"></i>&nbsp;Statistics');
+        },
+        disableStats: function(disabled){
+            if(disabled)
+                $('#btn-stats').addClass('disabled');
+            else
+                $('#btn-stats').removeClass('disabled');
+        },
         clearMembers: function () {
             $("#members").html("");
         },
@@ -249,6 +257,43 @@ var ui = {
             if (link.find('svg').hasClass("fa-chevron-circle-down")) {
                 link.click();
             }
+        },
+        showFinalResults: function(stats, members){
+            $('#hintLink').html('<i class="fas fa-chevron-circle-right"></i>&nbsp;Results');
+
+            $('#hint').append('' +
+                '<h3>Question results :</h3>' +
+                '<ul id="questionStats"></ul>');
+
+            stats.forEach(function(e, i){
+                var html = '<li><b>Question '+(i+1)+' : </b>';
+                var pa = e[2] <= 0 ? 0 : (100 * (e[0] / e[2])).toFixed(0);
+                html += 'Correct : '+pa+' % ';
+                if(e[1] !== e[2] && e[2] > 0){
+                    var pu = (100 * (1 - (e[1] / e[2]))).toFixed(0);
+                    html += '/ Unanswered : '+pu+' %';
+                }
+                html += '</li>';
+
+                $('#questionStats').append(html);
+            });
+
+            if(Object.keys(members).length > 0){
+                $('#hint').append('' +
+                    '<h3>Individual results :</h3>' +
+                    '<ul id="memberStats"></ul>');
+                var m = Object.keys(members).map(function(v) { return members[v]; });
+                m.sort(function(a,b){
+                   return b.correct - a.correct;
+                });
+                m.forEach(function(e){
+                    var pa = (100 * (e.correct / stats.length)).toFixed(0);
+                    $('#memberStats').append('<li><b>'+e.name+' : </b> Correct : '+e.correct+' ('+pa+' %)</li>');
+                });
+            }
+
+            $('#hintDiv').show();
+
         }
     },
     questions: {
