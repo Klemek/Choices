@@ -135,7 +135,6 @@ var room = {
                             data.question.answers[room.answers[mapping.letterToAnswer[ans] - 1]]
                         );
                     });
-                    ui.room.fitAnswers();
                     break;
                 case "RESULTS":
                     data.users.forEach(function (member) {
@@ -173,7 +172,6 @@ var room = {
                             room.showStats ? data.users.length : undefined
                         );
                     });
-                    ui.room.fitAnswers();
                     break;
                 case "CLOSED":
                     $(window).unbind('beforeunload');
@@ -191,22 +189,23 @@ var room = {
             }
         }
 
-        if (data.state === "ANSWERING") {
-            ui.room.disableStats(total < data.users.length);
-            if (room.showStats && total === data.users.length) {
-                ['A', 'B', 'C', 'D'].forEach(function (ans) {
-                    ui.room.updateAnswer(
-                        ans,
-                        true,
-                        data.question.answers[room.answers[mapping.letterToAnswer[ans] - 1]],
-                        answered[mapping.letterToAnswer[ans]],
-                        total
-                    );
-                });
-            }
-        }
+        if (JSON.stringify(data.users) !== this.currentMembers) {
 
-        if (data.users.toString() !== this.currentMembers) {
+            if (data.state === "ANSWERING") {
+                ui.room.disableStats(total < data.users.length);
+                if (room.showStats && total === data.users.length) {
+                    ['A', 'B', 'C', 'D'].forEach(function (ans) {
+                        ui.room.updateAnswer(
+                            ans,
+                            true,
+                            data.question.answers[room.answers[mapping.letterToAnswer[ans] - 1]],
+                            answered[mapping.letterToAnswer[ans]],
+                            total
+                        );
+                    });
+                }
+            }
+
             data.users.forEach(function (member) {
                 if (data.state === "RESULTS" && this.showAnswers)
                     ui.room.setMemberBg(member.id, mapping.answerToColor[member.answer]);
@@ -214,6 +213,8 @@ var room = {
                     ui.room.setMemberBg(member.id, member.answer === 0 ? 'secondary' : 'dark');
             });
         }
+
+        ui.room.finishView();
 
         this.locked = data.lock;
         this.currentState = data.state;

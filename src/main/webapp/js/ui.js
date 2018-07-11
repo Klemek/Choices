@@ -177,7 +177,6 @@ var ui = {
             } else {
                 $('#hintDiv').hide();
             }
-
             if (btnNext)
                 $('#btn-next').text(btnNext);
             else
@@ -198,7 +197,8 @@ var ui = {
                 .attr("class", "btn btn-" + (plain ? '' : 'outline-') + mapping.letterToColor(ans) + " btn-block btn-lg h-100")
                 .html(html);
         },
-        fitAnswers: function(){
+        finishView: function(){
+            window.updateMath();
             setTimeout(function(){
                 var height = 0;
                 $('.answer').each(function(){
@@ -507,6 +507,7 @@ var ui = {
                     preview.find('.btn-info').html('C : ' + answers[2]);
                     preview.find('.btn-warning').html('D : ' + answers[3]);
                     $(preview.find('.card-body')[1]).html(hint);
+                    window.updateMath();
                     setTimeout(function(){
                         var height = 0;
                         preview.find('.answer').each(function(){
