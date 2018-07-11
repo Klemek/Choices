@@ -57,7 +57,7 @@ var questions = {
     delete: function(packId, name){
         if((''+packId).indexOf('tmp') !== 0){
             if(window.confirm("Would you like to delete the pack '"+name+"' ?")) {
-                ajax.call('DELETE', '/questions/' + packId, data, function () {
+                ajax.call('DELETE', '/questions/' + packId, function () {
                     ui.questions.removePack(packId);
                     ui.addAlert('success', 'Pack deleted');
                 }, function () {
