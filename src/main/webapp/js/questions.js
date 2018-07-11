@@ -36,16 +36,20 @@ var questions = {
         if((''+packId).indexOf('tmp') === 0){
             ajax.call('PUT', '/questions/create', data, function (pack) {
                 ui.questions.removePack(packId);
-                ui.questions.addPack(pack.id, pack.name, pack.questions);
+                ui.questions.addPack(pack.id, pack.name, pack.questions, true);
                 delete questions.changes[packId];
+                ui.addAlert('success', 'Pack updated');
             }, function () {
+                ui.questions.releasePack(packId);
                 ui.addAlert('danger','Cannot create question pack, please retry');
             });
         }else{
             ajax.call('POST', '/questions/'+packId, data, function (pack) {
-                ui.questions.updatePack(pack.id, pack.name, pack.questions);
+                ui.questions.updatePack(pack.id, pack.name, pack.questions, true);
                 delete questions.changes[packId];
+                ui.addAlert('success', 'Pack updated');
             }, function () {
+                ui.questions.releasePack(packId);
                 ui.addAlert('danger','Cannot update question pack, please retry');
             });
         }
@@ -55,13 +59,20 @@ var questions = {
             if(window.confirm("Would you like to delete the pack '"+name+"' ?")) {
                 ajax.call('DELETE', '/questions/' + packId, data, function () {
                     ui.questions.removePack(packId);
+                    ui.addAlert('success', 'Pack deleted');
                 }, function () {
+                    ui.questions.releasePack(packId);
                     ui.addAlert('danger', 'Cannot delete question pack, please retry');
                 });
+            }else{
+                ui.questions.releasePack(packId);
             }
         }else{
             if(window.confirm("Would you like to delete this new pack ?")) {
                 ui.questions.removePack(packId);
+                ui.addAlert('success', 'Pack deleted');
+            }else{
+                ui.questions.releasePack(packId);
             }
         }
     }

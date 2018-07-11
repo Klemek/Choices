@@ -1,4 +1,4 @@
-var debug = true;
+var debug = false;
 
 //ajax global to handle all ajax calls with authentication (X-Token header)
 var ajax = {

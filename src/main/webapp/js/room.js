@@ -238,8 +238,7 @@ var room = {
             ui.views.showView('menu');
             ui.addAlert("danger", "Cannot create room");
         });
-    }
-    ,
+    },
     next: function () {
         ui.room.closeHint();
         room.showStats = room.alwaysShowStats;
@@ -248,8 +247,7 @@ var room = {
         }, function () {
             ui.addAlert("warning", "Cannot edit room, please retry");
         });
-    }
-    ,
+    },
     ajaxRefresh: function (force) {
         ajax.call('GET', '/room/' + room.id, function (data) {
             room.refresh(data, force);
@@ -257,8 +255,7 @@ var room = {
             $(window).unbind('beforeunload');
             window.location.href = "/";
         });
-    }
-    ,
+    },
     changeAutoRefresh: function () {
         if (room.autoRefresh) {
             clearInterval(room.autoRefresh);
@@ -267,18 +264,13 @@ var room = {
             room.autoRefresh = setInterval(room.ajaxRefresh, 1000);
         }
         ui.room.setAutoRefresh(room.autoRefresh);
-    }
-    ,
-    delete:
-
-        function () {
-            if (room.currentState === "CLOSED" || window.confirm("Are you sure you want to delete the room ?")) {
-                $(window).unbind('beforeunload');
-                window.location.href = "/";
-            }
+    },
+    delete: function () {
+        if (room.currentState === "CLOSED" || window.confirm("Are you sure you want to delete the room ?")) {
+            $(window).unbind('beforeunload');
+            window.location.href = "/";
         }
-
-    ,
+    },
     answerQuestion: function (val) {
         ajax.call('POST', '/room/' + room.id + '/answer/' + val, function () {
         }, function () {
@@ -288,8 +280,7 @@ var room = {
             ui.views.showView('menu');
             ui.addAlert("danger", "Disconnected from room " + room.id);
         });
-    }
-    ,
+    },
     kick: function (memberId, memberName) {
         if (window.confirm("Are you sure you want to kick " + memberName + " ?")) {
             ajax.call('DELETE', '/room/' + room.id + '/kick/' + memberId, function (data) {
@@ -298,16 +289,14 @@ var room = {
                 ui.addAlert("warning", "Cannot kick " + memberName + ", please retry");
             });
         }
-    }
-    ,
+    },
     changeLock: function () {
         ajax.call('POST', '/room/' + room.id + (room.locked ? '/unlock' : '/lock'), function (data) {
             room.refresh(data, true);
         }, function () {
             ui.addAlert("warning", "Cannot " + (room.locked ? 'unlock' : 'lock') + " room, please retry");
         });
-    }
-    ,
+    },
     changeStats: function () {
         room.showStats = !room.showStats;
         room.ajaxRefresh(true);

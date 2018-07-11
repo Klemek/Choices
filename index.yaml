@@ -1,0 +1,13 @@
+indexes:
+
+- kind: QuestionPack
+  ancestor: false
+  properties:
+  - name: name
+    direction: asc
+
+- kind: Room
+  ancestor: false
+  properties:
+  - name: simpleId
+    direction: asc

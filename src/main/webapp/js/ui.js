@@ -22,7 +22,13 @@ var ui = {
             '<div class="alert alert-' + type + ' alert-dismissible w-100 fade show">' +
             '<button type="button" class="close" data-dismiss="alert">&times;</button>' + text + '' +
             '</div>');
-        $('#alerts:last-child').hide().fadeIn();
+        var alert = $('#alerts:last-child');
+        alert.hide().fadeIn();
+        setTimeout(function(){
+            alert.fadeOut(400, function(){
+                alert.remove();
+            });
+        },5000);
     },
     setCurrentUser: function (data) {
         $('#user')
@@ -303,7 +309,7 @@ var ui = {
             $('#packs').append(html);
             ui.questions.updatePack(id, name, qs);
         },
-        updatePack: function (id, name, qs) {
+        updatePack: function (id, name, qs, open) {
             var html = '' +
                 '<div class="card-header">' +
                 '<a class="card-link" data-toggle="collapse" href="#' + id + '"><i class="fas fa-chevron-circle-right"></i>&nbsp;' + (name ? name : 'New question pack') + '</a>' +
@@ -320,7 +326,10 @@ var ui = {
                 '<div class="col-6"><button class="btn btn-primary btn-block"><i class="fas fa-sync"></i>&nbsp;Save</button></div>' +
                 '<div class="col-6"><button class="btn btn-add btn-success btn-block"><i class="fas fa-plus"></i>&nbsp;New question</button>' +
                 '</div></div></div></div>';
-            $('#' + id + 'c').html(html);
+
+            var card = $('#' + id + 'c');
+
+            card.html(html);
 
             if (qs)
                 qs.forEach(function (q, i) {
@@ -331,11 +340,14 @@ var ui = {
                 questions.changes[id] = true;
             });
 
-            $($('#' + id + 'c').find('.btn-delete')[0]).click(function () {
+            $(card.find('.btn-delete')[0]).click(function () {
+                $(card.find('.btn-delete')[0]).addClass('disabled');
+                $(card.find('.btn-primary')[0]).addClass('disabled');
+                $(card.find('.btn-delete')[0]).find('svg').attr('class','fas fa-spinner fa-spin');
                 questions.delete(id, name);
             });
 
-            $($('#' + id).find('.btn-primary')[0]).click(function () {
+            $(card.find('.btn-primary')[0]).click(function () {
 
                 var name = $('#' + id + 'n').val();
                 var qs = [];
@@ -368,17 +380,32 @@ var ui = {
 
                 if (total !== qs.length)
                     ui.addAlert('warning', 'Some questions are incomplete, fix it before saving');
-                else
+                else{
+                    $(card.find('.btn-delete')[0]).addClass('disabled');
+                    $(card.find('.btn-primary')[0]).addClass('disabled');
+                    $(card.find('.btn-primary')[0]).find('svg').attr('class','fas fa-spinner fa-spin');
                     questions.update(id, name, qs);
+                }
             });
 
-            $('#' + id).find('.btn-add').click(function () {
+            card.find('.btn-add').click(function () {
                 questions.changes[id] = true;
-                var i = $('#' + id + 'c').find('.fa-question-circle').length + 1;
+                var i = card.find('.fa-question-circle').length + 1;
                 ui.questions.addQuestion(id, i);
             });
 
             ui.registerCards();
+
+            if(open){
+                $(card.find('.card-link')[0]).click();
+            }
+        },
+        releasePack: function(id){
+            var card = $('#' + id + 'c');
+            $(card.find('.btn-delete')[0]).removeClass('disabled');
+            $(card.find('.btn-delete')[0]).find('svg').attr('class','fas fa-plus');
+            $(card.find('.btn-primary')[0]).removeClass('disabled');
+            $(card.find('.btn-primary')[0]).find('svg').attr('class','fas fa-sync');
         },
         removePack: function (id) {
             $('#' + id + 'c').remove();

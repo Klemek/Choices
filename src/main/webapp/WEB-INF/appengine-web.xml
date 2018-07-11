@@ -5,4 +5,5 @@
     <runtime>java8</runtime>
     <sessions-enabled>true</sessions-enabled>
     <async-session-persistence enabled="true" />
+    <version>alpha-001</version>
 </appengine-web-app>
