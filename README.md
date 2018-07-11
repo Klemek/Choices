@@ -29,16 +29,30 @@ It allow you to create question-based rooms and with the room number other peopl
 
 ## Launching the project
 
+### Before launch
+
 First, edit the auth.clientID and auth.clientSecret in the pom.xml properties
 
 (To get OAuth2 credentials go see [this page](https://cloud.google.com/java/getting-started/authenticate-users))
 
 then create a `release.properties` file (located in the `WEB-INF` folder) which contains `admins={every admin's mails separated by ;}`
 
-You can launch the project with the command :
+### Launching development server
 
-```mvn -Plocal clean package jetty:run -DskipTests```
+You can launch the project with the jetty command :
 
-and upload it to Google App Engine with :
+```mvn clean verify jetty:run -Plocal```
 
-```mvn clean appengine:deploy -DprojectID={projectid}```
+Or appengine command :
+
+```mvn clean verify appengine:run -Plocal```
+
+Please note that, unlike App Engine, Jetty will load static files (html, css, js, etc.) directly from the source folder which allow you to do live front-end development.
+
+You can add `-DskipTests` to skip all tests.
+
+### Uploading to Google App Engine
+
+Upload the project to Google App Engine with :
+
+```mvn clean verify appengine:deploy -DprojectID={projectid}```

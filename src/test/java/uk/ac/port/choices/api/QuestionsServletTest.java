@@ -41,6 +41,7 @@ public class QuestionsServletTest {
 
     @BeforeClass
     public static void setUpClass() {
+        assertTrue(TestUtils.setUpLocalDatastore());
         for (QuestionPack questionPack : QuestionPackDao.listQuestionPacks()) {
             QuestionPackDao.deleteQuestionPack(questionPack);
         }

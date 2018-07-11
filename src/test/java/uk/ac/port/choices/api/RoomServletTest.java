@@ -3,6 +3,7 @@ package uk.ac.port.choices.api;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
@@ -32,6 +33,11 @@ public class RoomServletTest {
 
     private Room room;
     private QuestionPack pack;
+
+    @BeforeClass
+    public static void setUpClass() {
+        assertTrue(TestUtils.setUpLocalDatastore());
+    }
 
     @Before
     public void setUp() {

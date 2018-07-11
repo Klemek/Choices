@@ -1,5 +1,6 @@
 package uk.ac.port.choices;
 
+import com.google.cloud.datastore.testing.LocalDatastoreHelper;
 import org.json.JSONObject;
 import org.mockito.Mockito;
 
@@ -12,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -21,13 +23,14 @@ import static org.mockito.Mockito.*;
 public final class TestUtils {
 
     public static final Level LOG_LEVEL = Level.INFO;
+    public static boolean datastoreInitialized;
 
     private TestUtils() {
 
     }
 
     public static HttpServletRequest createMockRequest(String method, String URI, Map<String, String> parameters,
-                                                       Map<String, String> headers, Map<String,Object> session) {
+                                                       Map<String, String> headers, Map<String, Object> session) {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getMethod()).thenReturn(method);
         when(request.getRequestURI()).thenReturn(URI);
@@ -41,7 +44,7 @@ public final class TestUtils {
         HttpSession sessionMock = mock(HttpSession.class);
         when(request.getSession()).thenReturn(sessionMock);
         when(sessionMock.getAttribute(Mockito.anyString())).thenReturn(null);
-        if (session != null){
+        if (session != null) {
             for (Map.Entry<String, Object> param : session.entrySet()) {
                 when(sessionMock.getAttribute(param.getKey())).thenReturn(param.getValue());
             }
@@ -94,4 +97,22 @@ public final class TestUtils {
         return new JSONObject(stringWriter.toString());
     }
 
+    public static boolean setUpLocalDatastore() {
+        if (!TestUtils.datastoreInitialized) {
+            try {
+                LocalDatastoreHelper helper = LocalDatastoreHelper.create(1.0);
+                helper.start();
+
+                Class<?> daoUtils = Class.forName("uk.ac.port.choices.dao.DaoUtils");
+                Field datastore = daoUtils.getDeclaredField("datastore");
+                datastore.setAccessible(true);
+                datastore.set(daoUtils, helper.getOptions().getService());
+
+                TestUtils.datastoreInitialized = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return true;
+    }
 }

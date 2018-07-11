@@ -2,6 +2,7 @@ package uk.ac.port.choices.dao;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import uk.ac.port.choices.TestUtils;
 import uk.ac.port.choices.model.Question;
 import uk.ac.port.choices.model.QuestionPack;
 
@@ -14,8 +15,11 @@ public class QuestionPackDaoTest {
 
     private static QuestionPack pack;
 
+
     @BeforeClass
-    public static void setUp() {
+    public static void setUpClass() {
+        assertTrue(TestUtils.setUpLocalDatastore());
+
         for (QuestionPack questionPack : QuestionPackDao.listQuestionPacks()) {
             QuestionPackDao.deleteQuestionPack(questionPack);
         }
@@ -35,7 +39,7 @@ public class QuestionPackDaoTest {
         assertEquals(id, QuestionPackDaoTest.pack.getId());
         assertNotEquals(0L, (long) QuestionPackDaoTest.pack.getId());
 
-        QuestionPackDao.deleteQuestionPack(QuestionPackDaoTest.pack);
+        //QuestionPackDao.deleteQuestionPack(QuestionPackDaoTest.pack);
     }
 
     @Test

@@ -3,6 +3,7 @@ package uk.ac.port.choices.dao;
 import com.google.cloud.datastore.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import uk.ac.port.choices.TestUtils;
 import uk.ac.port.choices.model.Question;
 import uk.ac.port.choices.model.QuestionPack;
 import uk.ac.port.choices.model.Room;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class DaoUtilsTest {
 
@@ -24,7 +26,9 @@ public class DaoUtilsTest {
     private static QuestionPack pack;
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUpClass() {
+        assertTrue(TestUtils.setUpLocalDatastore());
+
         Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
         DaoUtilsTest.roomKeyFactory = datastore.newKeyFactory().setKind(RoomDao.KIND);
         DaoUtilsTest.questionPackKeyFactory = datastore.newKeyFactory().setKind(QuestionPackDao.KIND);

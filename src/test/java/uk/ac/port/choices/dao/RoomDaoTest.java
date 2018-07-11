@@ -2,6 +2,7 @@ package uk.ac.port.choices.dao;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import uk.ac.port.choices.TestUtils;
 import uk.ac.port.choices.model.Question;
 import uk.ac.port.choices.model.Room;
 import uk.ac.port.choices.model.User;
@@ -16,7 +17,9 @@ public class RoomDaoTest {
     private static Room room;
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUpClass() {
+        assertTrue(TestUtils.setUpLocalDatastore());
+
         List<Question> questionList = new ArrayList<>();
         questionList.add(new Question("What is 1+1", "hint", new String[]{"1", "2", "3", "4"}));
         List<User> users = new ArrayList<>();
