@@ -31,11 +31,12 @@ It allow you to create question-based rooms and with the room number other peopl
 
 ### Before launch
 
-First, edit the auth.clientID and auth.clientSecret in the pom.xml properties
+First, in your Google App Engine project, make sure Datastores and Google+ APIs are enabled.
+(or follow [this link](https://console.cloud.google.com/flows/enableapi?apiid=datastore.googleapis.com,datastore,plus) to do so)
 
-(To get OAuth2 credentials go see [this page](https://cloud.google.com/java/getting-started/authenticate-users))
+Get OAuth2 credentials (see how in [this page](https://cloud.google.com/java/getting-started/authenticate-users)) and edit the auth.clientID and auth.clientSecret in the pom.xml properties
 
-then create a `release.properties` file (located in the `WEB-INF` folder) which contains `admins={every admin's mails separated by ;}`
+Then create a `release.properties` file (located in the `WEB-INF` folder) which contains `admins={every admin's mails separated by ;}`
 
 ### Launching development server
 
