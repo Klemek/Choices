@@ -26,8 +26,9 @@ It allow you to create question-based rooms and with the room number other peopl
   * Java 8
   * Google Appengine API 1.9.64
   * Google Cloud Client 0.47.0-alpha
-  * JSON 20180130 (json.org)
+  * JSON 20180813 (json.org)
   * Betterlists 1.4 (klemek)
+  * SimpleLogger 1.3 (klemek)
   * Testing : Junit 4.12
   * Testing : Mockito 2.19.0
   * Testing : Powermock 2.0.0-beta.5
