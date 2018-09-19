@@ -1,15 +1,21 @@
 package uk.ac.port.choices.oauth2;
 
-import com.google.api.client.http.*;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpResponseException;
+import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import uk.ac.port.choices.utils.Logger;
+
+import fr.klemek.logger.Logger;
+
+import java.io.IOException;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.IOException;
 
 @WebServlet(name = "logout", value = "/logout")
 @SuppressWarnings("serial")

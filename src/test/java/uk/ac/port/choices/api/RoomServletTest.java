@@ -1,49 +1,40 @@
 package uk.ac.port.choices.api;
 
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.modules.junit4.PowerMockRunner;
 import uk.ac.port.choices.TestUtils;
 import uk.ac.port.choices.dao.QuestionPackDao;
 import uk.ac.port.choices.dao.RoomDao;
-import uk.ac.port.choices.model.Question;
 import uk.ac.port.choices.model.QuestionPack;
 import uk.ac.port.choices.model.Room;
 import uk.ac.port.choices.model.User;
 import uk.ac.port.choices.oauth2.Oauth2CallbackServlet;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import static org.junit.Assert.*;
-
-@RunWith(PowerMockRunner.class)
-@PowerMockIgnore({"java.*", "javax.*", "org.*"})
 public class RoomServletTest {
 
     private Room room;
     private QuestionPack pack;
 
-    @BeforeClass
-    public static void setUpClass() {
-        assertTrue(TestUtils.setUpLocalDatastore());
-    }
-
     @Before
     public void setUp() {
-        List<Question> questionList = new ArrayList<>();
-        questionList.add(new Question("What is 1+1", "hint", new String[]{"2", "1", "3", "4"}));
-        room = new Room(questionList, "masterid");
+        room = new Room("masterid", "simpleid");
         RoomDao.createRoom(room);
     }
 
@@ -66,7 +57,7 @@ public class RoomServletTest {
         HttpServletRequest request = TestUtils.createMockRequest("OPTIONS", "", null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new RoomServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
     }
 
@@ -78,7 +69,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
 
         assertEquals(401, res.getInt("code"));
     }
@@ -87,11 +78,7 @@ public class RoomServletTest {
     public void testCreateRoom() {
         RoomDao.deleteRoom(room);
 
-        Question question = new Question("What is 1+1", "hint", new String[]{"1", "2", "3", "4"});
-        List<Question> questionList = new ArrayList<>();
-        questionList.add(question);
-
-        pack = new QuestionPack("name", questionList);
+        pack = new QuestionPack("name", "video", "message", true, Arrays.asList(TestUtils.question));
         QuestionPackDao.createQuestionPack(pack);
 
         String userid = "userid";
@@ -107,12 +94,14 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
         JSONObject value = res.getJSONObject("value");
 
         assertTrue(value.has("id"));
         String simpleId = value.getString("id");
+        assertTrue(value.has("pack"));
+        assertEquals(pack.getName(), value.getJSONObject("pack").get("name"));
 
         room = RoomDao.getRoomBySimpleId(simpleId);
         assertNotNull(room);
@@ -137,7 +126,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(400, res.getInt("code"));
     }
 
@@ -152,7 +141,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
         JSONObject value = res.getJSONObject("value");
 
@@ -170,7 +159,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(404, res.getInt("code"));
     }
 
@@ -190,7 +179,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(403, res.getInt("code"));
     }
 
@@ -210,7 +199,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
 
         room = RoomDao.getRoomBySimpleId(room.getSimpleId());
@@ -220,7 +209,7 @@ public class RoomServletTest {
 
     @Test
     public void testJoinRoomClosed() {
-        room.setLock(true);
+        room.setLocked(true);
         RoomDao.updateRoom(room);
 
         String userid = "userid";
@@ -234,7 +223,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(403, res.getInt("code"));
     }
 
@@ -249,7 +238,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(404, res.getInt("code"));
     }
 
@@ -268,7 +257,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
         room = RoomDao.getRoomBySimpleId(room.getSimpleId());
         assertEquals(0, room.getUsers().size());
@@ -285,7 +274,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(403, res.getInt("code"));
     }
 
@@ -300,7 +289,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(404, res.getInt("code"));
     }
 
@@ -318,7 +307,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
         room = RoomDao.getRoomBySimpleId(room.getSimpleId());
         assertNull(room);
@@ -339,7 +328,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(403, res.getInt("code"));
     }
 
@@ -358,7 +347,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(404, res.getInt("code"));
     }
 
@@ -377,7 +366,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
         room = RoomDao.getRoomBySimpleId(room.getSimpleId());
         assertEquals(0, room.getUsers().size());
@@ -398,7 +387,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(403, res.getInt("code"));
     }
 
@@ -415,7 +404,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(404, res.getInt("code"));
     }
 
@@ -430,7 +419,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(404, res.getInt("code"));
     }
 
@@ -438,7 +427,7 @@ public class RoomServletTest {
     public void testAnswerRoomQuestion() {
         String userid = "userid";
         room.getUsers().add(new User(userid, "name", "imageUrl", 0));
-        room.next(); //answering
+        room.resetAnswers(); //answering
         RoomDao.updateRoom(room);
         assertEquals(0, room.getUsers().get(0).getAnswer());
 
@@ -451,7 +440,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
         room = RoomDao.getRoomBySimpleId(room.getSimpleId());
         assertEquals(1, room.getUsers().get(0).getAnswer());
@@ -461,7 +450,6 @@ public class RoomServletTest {
     public void testAnswerRoomQuestionBadRequest() {
         String userid = "userid";
         room.getUsers().add(new User(userid, "name", "imageUrl", 0));
-        room.next(); //answering
         RoomDao.updateRoom(room);
         assertEquals(0, room.getUsers().get(0).getAnswer());
 
@@ -474,7 +462,7 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(400, res.getInt("code"));
         room = RoomDao.getRoomBySimpleId(room.getSimpleId());
         assertEquals(0, room.getUsers().get(0).getAnswer());
@@ -491,44 +479,51 @@ public class RoomServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(403, res.getInt("code"));
     }
 
     @Test
-    public void testNextRoomQuestion() {
+    public void testUpdateRoomResetAnswers() {
+        String userid = "userid";
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, room.getMasterId());
+        room.getUsers().add(new User(userid, "name", "imageUrl", 1));
+        RoomDao.updateRoom(room);
+        assertEquals(1, room.getUsers().get(0).getAnswer());
+
+        Map<String, String> params = new HashMap<>();
+        params.put(Room.KEY_RESET, "true");
 
         StringWriter writer = new StringWriter();
-        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/" + room.getSimpleId() + "/next", null, null, session);
+        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/" + room.getSimpleId(), params, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
         room = RoomDao.getRoomBySimpleId(room.getSimpleId());
-        assertEquals(Room.State.ANSWERING, room.getState());
+        assertEquals(0, room.getUsers().get(0).getAnswer());
     }
 
     @Test
-    public void testNextRoomQuestionNotFound() {
+    public void testUpdateRoomNotFound() {
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
 
         StringWriter writer = new StringWriter();
-        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/1234/next", null, null, session);
+        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/1234", null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(404, res.getInt("code"));
     }
 
     @Test
-    public void testNextRoomQuestionForbidden() {
+    public void testUpdateRoomForbidden() {
         String userid = "userid";
 
         room.getUsers().add(new User(userid, "name", "imageUrl", 0));
@@ -538,12 +533,12 @@ public class RoomServletTest {
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, userid);
 
         StringWriter writer = new StringWriter();
-        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/" + room.getSimpleId() + "/next", null, null, session);
+        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/" + room.getSimpleId(), null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(403, res.getInt("code"));
     }
 
@@ -552,95 +547,89 @@ public class RoomServletTest {
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, room.getMasterId());
 
+        Map<String, String> params = new HashMap<>();
+        params.put(Room.KEY_LOCK, "true");
+
         StringWriter writer = new StringWriter();
-        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/" + room.getSimpleId() + "/lock", null, null, session);
+        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/" + room.getSimpleId(), params, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
         room = RoomDao.getRoomBySimpleId(room.getSimpleId());
         assertTrue(room.isLocked());
     }
 
     @Test
-    public void testLockRoomForbidden() {
-        Map<String, Object> session = new HashMap<>();
-        session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
-
-        StringWriter writer = new StringWriter();
-        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/" + room.getSimpleId() + "/lock", null, null, session);
-        HttpServletResponse response = TestUtils.createMockResponse(writer);
-
-        new RoomServlet().service(request, response);
-
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
-        assertEquals(403, res.getInt("code"));
-    }
-
-    @Test
-    public void testLockRoomNotFound() {
-        Map<String, Object> session = new HashMap<>();
-        session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
-
-        StringWriter writer = new StringWriter();
-        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/12345/lock", null, null, session);
-        HttpServletResponse response = TestUtils.createMockResponse(writer);
-
-        new RoomServlet().service(request, response);
-
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
-        assertEquals(404, res.getInt("code"));
-    }
-
-    @Test
     public void testUnlockRoom() {
-        room.setLock(true);
+        room.setLocked(true);
         RoomDao.updateRoom(room);
 
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, room.getMasterId());
 
+        Map<String, String> params = new HashMap<>();
+        params.put(Room.KEY_LOCK, "false");
+
         StringWriter writer = new StringWriter();
-        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/" + room.getSimpleId() + "/unlock", null, null, session);
+        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/" + room.getSimpleId(), params, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
         room = RoomDao.getRoomBySimpleId(room.getSimpleId());
         assertFalse(room.isLocked());
     }
 
     @Test
-    public void testUnlockRoomForbidden() {
+    public void testLockAnswers() {
         Map<String, Object> session = new HashMap<>();
-        session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
+        session.put(Oauth2CallbackServlet.SESSION_USER_ID, room.getMasterId());
+
+        Map<String, String> params = new HashMap<>();
+        params.put(Room.KEY_LOCK_ANSWERS, "true");
 
         StringWriter writer = new StringWriter();
-        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/" + room.getSimpleId() + "/unlock", null, null, session);
+        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/" + room.getSimpleId(), params, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
-        assertEquals(403, res.getInt("code"));
+        JSONObject res = TestUtils.getResponseAsJson(writer);
+        assertEquals(200, res.getInt("code"));
+        room = RoomDao.getRoomBySimpleId(room.getSimpleId());
+        assertTrue(room.areAnswersLocked());
     }
 
     @Test
-    public void testUnlockRoomNotFound() {
+    public void testUnlockAnswers() {
+        room.setAnswersLocked(true);
+        RoomDao.updateRoom(room);
+
         Map<String, Object> session = new HashMap<>();
-        session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
+        session.put(Oauth2CallbackServlet.SESSION_USER_ID, room.getMasterId());
+
+        Map<String, String> params = new HashMap<>();
+        params.put(Room.KEY_LOCK_ANSWERS, "false");
 
         StringWriter writer = new StringWriter();
-        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/12345/unlock", null, null, session);
+        HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/room/" + room.getSimpleId(), params, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
-        assertEquals(404, res.getInt("code"));
+        JSONObject res = TestUtils.getResponseAsJson(writer);
+        assertEquals(200, res.getInt("code"));
+        room = RoomDao.getRoomBySimpleId(room.getSimpleId());
+        assertFalse(room.areAnswersLocked());
+    }
+
+    @BeforeClass
+    public static void setUpClass() {
+        assertTrue(TestUtils.prepareTestClass(true));
     }
 }

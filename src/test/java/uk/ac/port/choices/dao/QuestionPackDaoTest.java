@@ -1,35 +1,22 @@
 package uk.ac.port.choices.dao;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import uk.ac.port.choices.TestUtils;
-import uk.ac.port.choices.model.Question;
 import uk.ac.port.choices.model.QuestionPack;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class QuestionPackDaoTest {
 
     private static QuestionPack pack;
-
-
-    @BeforeClass
-    public static void setUpClass() {
-        assertTrue(TestUtils.setUpLocalDatastore());
-
-        for (QuestionPack questionPack : QuestionPackDao.listQuestionPacks()) {
-            QuestionPackDao.deleteQuestionPack(questionPack);
-        }
-
-        Question question = new Question("What is 1+1", "hint", new String[]{"1", "2", "3", "4"});
-        List<Question> questionList = new ArrayList<>();
-        questionList.add(question);
-
-        QuestionPackDaoTest.pack = new QuestionPack(1L, "name", questionList);
-    }
 
     @Test
     public void createQuestionPack() {
@@ -46,7 +33,7 @@ public class QuestionPackDaoTest {
     public void updateQuestionPack() {
         assertNotNull(QuestionPackDao.createQuestionPack(QuestionPackDaoTest.pack));
 
-        QuestionPackDaoTest.pack = new QuestionPack(QuestionPackDaoTest.pack.getId(), "name2", QuestionPackDaoTest.pack.getQuestions());
+        QuestionPackDaoTest.pack = new QuestionPack(QuestionPackDaoTest.pack.getId(), "name2", "video2", "message2", true, QuestionPackDaoTest.pack.getQuestions());
         QuestionPackDao.updateQuestionPack(QuestionPackDaoTest.pack);
 
         QuestionPack pack2 = QuestionPackDao.getQuestionPackById(QuestionPackDaoTest.pack.getId());
@@ -88,5 +75,14 @@ public class QuestionPackDaoTest {
         assertEquals(QuestionPackDaoTest.pack, lst.get(0));
 
         QuestionPackDao.deleteQuestionPack(QuestionPackDaoTest.pack);
+    }
+
+    @BeforeClass
+    public static void setUpClass() {
+        assertTrue(TestUtils.prepareTestClass(true));
+
+        TestUtilsDao.deleteAllQuestionPack();
+
+        QuestionPackDaoTest.pack = new QuestionPack(1L, "name", "video", "message", true, Arrays.asList(TestUtils.question));
     }
 }

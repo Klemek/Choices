@@ -1,49 +1,55 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>Choices</title>
+    <title>&nbsp;</title>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <!-- CSS -->
-
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
-          integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
-    <link rel="stylesheet" href="fontawesome/css/all.css">
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
+          integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/solid.css"
+          integrity="sha384-VGP9aw4WtGH/uPAOseYxZ+Vz/vaTb1ehm1bwx92Fm8dTrE+3boLfF1SpAtB1z7HW"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/fontawesome.css"
+          integrity="sha384-1rquJLNOM3ijoueaaeS5m+McXPJCGdr5HcA03/VHXxcp2kX2sUrQDmFc3jR5i/C7"
+          crossorigin="anonymous">
     <link rel="stylesheet" href="css/main.css">
 
     <!-- favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-
     <!-- required scripts -->
+    <!-- JQuery -->
     <script
             src="https://code.jquery.com/jquery-3.3.1.min.js"
             integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
             crossorigin="anonymous"></script>
+    <script
+            src="https://code.jquery.com/color/jquery.color-2.1.2.min.js"
+            integrity="sha256-H28SdxWrZ387Ldn0qogCzFiUDDxfPiNIyJX7BECQkDE="
+            crossorigin="anonymous"></script>
+    <!-- Bootstrap -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
             integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
             crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"
             integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T"
             crossorigin="anonymous"></script>
-    <script src="fontawesome/js/all.js"></script>
+    <!-- MathJax config-->
     <script type="text/x-mathjax-config">
-      MathJax.Hub.Config({
-        tex2jax: {
-          inlineMath: [["$","$"],["\\(","\\)"]]
-        }
-      });
-
+        MathJax.Hub.Config({tex2jax:{inlineMath: [["$","$"],["\\(","\\)"]]},messageStyle: "none"});
     </script>
-    <script type="text/javascript"
-            src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/latest.js?config=TeX-AMS_CHTML-full">
-    </script>
+    <!-- Custom scripts -->
     <script src="js/globals.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/room.js"></script>
-    <script src="js/questions.js"></script>
-    <script src="js/main.js"></script>
+    <script src="js/cookies.js"></script>
+    <script>
+        $.getMultiScripts(jQuery.browser.mobile ? globals.mobileScripts : globals.defaultScripts).done(function () {
+            $.getScript('js/main.js');
+        });
+    </script>
 </head>
 <body>
 
@@ -58,34 +64,30 @@
 
 <!-- Navigation bar -->
 
-<nav class="navbar navbar-expand-sm navbar-light bg-light mb-4">
-    <a class="navbar-brand" href="/"><i class="fas fa-dice"></i>&nbsp;Choices</a>
-    <ul class="navbar-nav ml-auto">
-        <li id="user" class="nav-item dropleft" style="display:none;">
-            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">
-                <img class="rounded-circle user-image-nav" alt="User image" src="#"/>
-            </a>
-            <div class="dropdown-menu">
-                <div class="dropdown-item disabled">
-                    <img class="rounded-circle user-image-full" alt="User image" src="#"/>
-                    <div>
-                        <span class="user-name"></span><br/>
-                        <span class="user-mail"></span><br/>
-                        <span id="btn-logout" class="btn btn-primary btn-sm btn-block">Logout</span>
-                    </div>
-                </div>
+<div id="user" class="dropright" style="display:none;">
+    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">
+        <img class="rounded-circle user-image-nav" alt="User image" src="#"/>
+    </a>
+    <div class="dropdown-menu">
+        <div class="dropdown-item disabled">
+            <img class="rounded-circle user-image-full" alt="User image" src="#"/>
+            <div>
+                <span class="user-name"></span><br/>
+                <u><span class="user-mail"></span></u><br/>
+                <span id="btn-logout" class="enabled btn btn-danger btn-sm btn-block lang-text">btnLogout</span>
             </div>
-        </li>
-    </ul>
-</nav>
+        </div>
+    </div>
+</div>
 
 <!-- Loading -->
 
-<div id="loading" class="container">
-    <div class="row my-auto">
+<div id="loading" class="container h-100">
+    <div class="row h-100 vertical-align">
         <div class="col-lg-6 col-md-8 mx-auto">
             <div class="jumbotron">
-                <h1 class="text-center"><i class="fas fa-spinner fa-spin"></i>&nbsp;Loading</h1>
+                <h1 class="text-center"><i class="fas fa-spinner fa-spin"></i>&nbsp;<span
+                        id="lang-text-loading">Loading</span></h1>
             </div>
         </div>
     </div>
@@ -93,23 +95,25 @@
 
 <!-- Menu View-->
 
-<div id="menu-view" style="display:none" class="container">
-    <div class="row my-auto">
+<div id="menu-view" style="display:none;" class="container h-100">
+    <div class="row h-100 vertical-align">
         <div class="col-lg-6 col-md-8 mx-auto">
             <div class="jumbotron">
-                <h1 class="text-center"><i class="fas fa-dice"></i>&nbsp;Choices</h1>
+                <h1 class="text-center"><i class="fas fa-users-cog"></i>&nbsp;<span class="lang-text">titleMain</span>
+                </h1>
                 <br/>
                 <div class="row">
                     <div id="div-create-room" class="col-6 h-100 my-auto">
-                        <button id="btn-new" class="btn btn-primary btn-block">Create room</button>
-                        <button id="btn-questions" style="display:none" class="btn btn-primary btn-block">Edit
-                            questions
+                        <button id="btn-new" class="btn btn-primary btn-block lang-text"><span
+                                class="lang-text">btnNew</span>
                         </button>
                     </div>
-                    <div id="div-join-room" class="col-6">
+                    <div id="div-join-room" class="col-6 h-100 my-auto">
                         <input placeholder="Enter room ID" type="text" class="form-control"
-                               id="roomid">
-                        <button id="btn-join" class="btn btn-primary btn-block">Join room</button>
+                               id="roomid" autofocus>
+                        <button id="btn-join" class="btn btn-primary btn-block lang-text">
+                            btnJoin
+                        </button>
                     </div>
                 </div>
             </div>
@@ -119,26 +123,50 @@
 
 <!-- Create View -->
 
-<div id="create-view" style="display:none" class="container">
-    <div class="row my-auto">
+<div id="create-view" style="display:none" class="container h-100">
+    <div class="row h-100 vertical-align">
         <div class="col-lg-6 col-md-8 mx-auto">
             <div class="jumbotron">
-                <h1 class="text-center"><i class="fas fa-plus-circle"></i>&nbsp;Create room</h1>
+                <h4 title="Back" class="btn-back"><a href="#" class="text-secondary"><i
+                        class="fas fa-arrow-left"></i></a>
+                </h4>
+                <h2 class="text-center"><i class="fas fa-plus-circle"></i>&nbsp;<span
+                        class="lang-text">titleRoomCreate</span></h2>
                 <br/>
                 <div class="form-group">
-                    <label class="h4" for="question-pack"><i class="fas fa-list"></i>&nbsp;Question pack</label>
-                    <select class="form-control" id="question-pack">
+                    <label class="h5" for="question-pack"><i class="fas fa-list"></i>&nbsp;<span
+                            class="lang-text">selectQuestion</span></label>
+                    <select class="form-control custom-select-md" id="question-pack">
                     </select>
                 </div>
-                <div id="form-create-checkboxes">
+                <div class="form-inline">
+                    <label class="h5 lang-text">labelSeriesSize</label>&nbsp;
+                    <button id="btn-set-minus" class="btn btn-sm"><i class="fas fa-minus"></i></button>&nbsp;
+                    <label id="set-size" class="h5"></label>&nbsp;
+                    <button id="btn-set-plus" class="btn btn-sm"><i class="fas fa-plus"></i></button>&nbsp;
+                    <label class="h5 lang-text">labelSeriesSize2</label>
+                </div>
+                <br/>
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="cbLock" checked>
+                    <label class="custom-control-label lang-text h5" for="cbLock">cbLock</label>
+                </div>
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="cbRefresh" checked>
+                    <label class="custom-control-label lang-text h5"
+                           for="cbRefresh">cbRefresh</label>
+                </div>
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="cbCamera">
+                    <label class="custom-control-label lang-text h5" for="cbCamera">cbCamera</label>
                 </div>
                 <br/>
                 <div class="row">
                     <div class="col-8">
-                        <button id="btn-create" class="btn btn-primary btn-block">Create</button>
+                        <button id="btn-create" class="btn btn-primary btn-block lang-text">btnCreate</button>
                     </div>
                     <div class="col-4">
-                        <button id="btn-cancel" class="btn btn-danger btn-block">Cancel</button>
+                        <button id="btn-cancel" class="btn btn-danger btn-block lang-text">btnCancel</button>
                     </div>
                 </div>
             </div>
@@ -148,119 +176,125 @@
 
 <!-- Room View -->
 
-<div id="room-view" style="display:none" class="container">
-    <div class="row my-auto">
-        <div class="col-md-8 mx-auto">
-            <div class="jumbotron text-center">
-                <h1 id="room-name"></h1>
-                <h3 id="room-text"></h3>
-                <div id="answers" class="row">
-                    <div class="col-6 answer">
-                        <div id="answer-A" class="btn btn-danger btn-block btn-lg h-100"></div>
+<div id="room-view" class="h-100" style="display:none">
+    <div id="transparencyControlDiv" style="display:none">
+        <input type="range" class="custom-range" id="transparencyControl"
+               min="0.25" max="1" step="0.05" value="0.75" title="Chane opacity"><br/>
+        <span id="transparencyControlLabel" class="text-light"></span>
+    </div>
+    <div id="room-camera">
+        <video class="cameraVideo" autoplay crossorigin></video>
+        <canvas hidden></canvas>
+    </div>
+    <div class="container">
+        <div class="row h-100">
+            <div class="col-md-10 mx-auto">
+                <div class="jumbotron text-center">
+                    <span id="btn-delete" title="Delete" class="btn-delete text-danger h3"><i class="fas fa-times"></i></span>
+                    <h2 id="room-name"></h2>
+                    <div id="room-progress-container" style="display:none"
+                         class="progress bg-white room-progress position-relative">
+                        <div id="room-progress" class="progress-bar bg-success h-100"></div>
+                        <span id="room-progress-text"
+                              class="text-dark justify-content-center d-flex position-absolute w-100"></span>
                     </div>
-                    <div class="col-6 answer">
-                        <div id="answer-B" class="btn btn-success btn-block btn-lg h-100"></div>
-                    </div>
-                    <div class="col-6 answer">
-                        <div id="answer-C" class="btn btn-info btn-block btn-lg h-100"></div>
-                    </div>
-                    <div class="col-6 answer">
-                        <div id="answer-D" class="btn btn-warning btn-block btn-lg h-100"></div>
-                    </div>
-                </div>
-                <div id="hintDiv" style="display:none" class="card text-left">
-                    <div class="card-header">
-                        <a id="hintLink" class="card-link" data-toggle="collapse" href="#collapseHint">
-                            <i class="fas fa-chevron-circle-right"></i>&nbsp;Hint
-                        </a>
-                    </div>
-                    <div id="collapseHint" class="collapse" data-parent="#hintDiv">
-                        <div id="hint" class="card-body">
+                    <h3 id="room-text"></h3>
+                    <div id="video" class="row" style="display:none">
+                        <div class="col-1 center-col"><i id="btn-last-video" title="previous video"
+                                                         class="text-dark fas fa-2x fa-chevron-left cursor-pointer"></i>
+                        </div>
+                        <div id="videos" class="col-10"></div>
+                        <div class="col-1 center-col"><i id="btn-next-video" title="next video"
+                                                         class="text-dark fas fa-2x fa-chevron-right cursor-pointer"></i>
                         </div>
                     </div>
-                </div>
-                <br/>
-                <div class="row">
-                    <div class="col-6 col-lg-4 room-button">
-                        <button id="btn-next" class="btn btn-success btn-block"></button>
+                    <div id="answers" class="row">
+                        <div class="col-6 answer">
+                            <div id="answer-A" class="btn btn-success btn-block btn-lg h-100"></div>
+                        </div>
+                        <div class="col-6 answer">
+                            <div id="answer-B" class="btn btn-danger btn-block btn-lg h-100"></div>
+                        </div>
+                        <div class="col-6 answer">
+                            <div id="answer-C" class="btn btn-info btn-block btn-lg h-100"></div>
+                        </div>
+                        <div class="col-6 answer">
+                            <div id="answer-D" class="btn btn-warning btn-block btn-lg h-100"></div>
+                        </div>
                     </div>
-                    <div class="col-6 col-lg-4 room-button">
-                        <button id="btn-refresh" class="btn btn-info btn-block">
-                            <i class="fas fa-sync"></i>&nbsp;Refresh
-                        </button>
+                    <div id="stats-div" class="w-100" style="display:none">
+                        <div id="chart" class="w-100"></div>
+                        <h5><span class="lang-text">labelStatistics1</span> (<span class="lang-text text-success">labelStatistics2</span>
+                            - <span class="lang-text text-danger">labelStatistics3</span>)
+                        </h5>
                     </div>
-                    <div class="col-6 col-lg-4 room-button">
-                        <button id="btn-auto-refresh" class="btn btn-info btn-block">
-                            <i class="far fa-square"></i>&nbsp;Auto-Refresh
-                        </button>
+                    <h3 id="room-message" style="display:none"></h3>
+                    <br/>
+                    <div class="row">
+                        <div class="col-6 col-lg-3 room-button">
+                            <button id="btn-next" class="btn btn-success btn-block"></button>
+                        </div>
+                        <div class="col-6 col-lg-3 room-button">
+                            <button id="btn-lock" class="btn btn-info btn-block">
+                                <i class="fas fa-lock"></i>&nbsp;<span
+                                    class="lang-text">btnLock</span>
+                            </button>
+                        </div>
+                        <div class="col-6 col-lg-3 room-button">
+                            <button id="btn-refresh" class="btn btn-info btn-block">
+                                <i class="fas fa-sync"></i>&nbsp;<span
+                                    class="lang-text">btnRefresh</span>
+                            </button>
+                        </div>
+                        <div class="col-6 col-lg-3 room-button">
+                            <button id="btn-auto-refresh" class="btn btn-info btn-block">
+                                <i class="fas fa-square"></i>&nbsp;<span class="lang-text">btnAutoRefresh</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="col-6 col-lg-4 room-button">
-                        <button id="btn-lock" class="btn btn-info btn-block">
-                            <i class="fas fa-lock"></i>&nbsp;Lock
-                        </button>
+                    <div id="timer-progress-container" style="display:none" class="row">
+                        <div class="col-11">
+                            <div class="progress bg-white timer-progress">
+                                <div id="timer-progress" class="progress-bar bg-danger h-100"></div>
+                            </div>
+                        </div>
+                        <div class="col-1 center-col">
+                            <i title="cancel" class="fas fa-times text-danger cursor-pointer"></i>
+                        </div>
                     </div>
-                    <div class="col-6 col-lg-4 room-button">
-                        <button id="btn-stats" class="btn btn-info btn-block">
-                            <i class="fas fa-eye"></i>&nbsp;Statistics
-                        </button>
-                    </div>
-                    <div class="col-6 col-lg-4 room-button">
-                        <button id="btn-delete" class="btn btn-danger btn-block">
-                            <i class="fas fa-times"></i>&nbsp;Quit
-                        </button>
-                    </div>
-                </div>
-                <br/>
-                <br/>
-                <div id="members" class="row">
-                </div>
-            </div>
-        </div>
-        <br/>
-    </div>
-</div>
-
-<!-- Questions View -->
-
-<div id="questions-view" style="display:none" class="container">
-    <div class="row my-auto">
-        <div class="col-md-10 mx-auto">
-            <div class="jumbotron">
-                <h1 class="text-center"><i class="fas fa-edit"></i>&nbsp;Edit questions</h1>
-                <br/>
-                <div id="packs">
-                </div>
-                <br/>
-                <div class="row">
-                    <div class="col-6 offset-3">
-                        <button id="btn-create-pack" class="btn btn-success btn-block">
-                            <i class="fas fa-plus"></i>&nbsp;New question pack
-                        </button>
+                    <br/>
+                    <div id="members" class="row">
                     </div>
                 </div>
             </div>
+            <br/>
         </div>
     </div>
 </div>
 
 <!-- Pad View -->
 
-<div id="pad-view" style="display:none" class="container">
-    <div class="row">
-        <div id="btn-a" class="col-6 pad-cell">
-            <div class="jumbotron bg-danger"><h1 class="text-white text-center">A</h1></div>
-        </div>
-        <div id="btn-b" class="col-6 pad-cell">
-            <div class="jumbotron bg-success"><h1 class="text-white text-center">B</h1></div>
-        </div>
-        <div id="btn-c" class="col-6 pad-cell">
-            <div class="jumbotron bg-info"><h1 class="text-white text-center">C</h1></div>
-        </div>
-        <div id="btn-d" class="col-6 pad-cell">
-            <div class="jumbotron bg-warning"><h1 class="text-center">D</h1></div>
+<div id="pad-view" style="display:none">
+    <button id="btn-last-answer" class="btn btn-dark text-light"><i class="fas fa-eye"></i></button>
+    <button id="btn-quit" class="btn btn-danger text-light"><i class="fas fa-times"></i></button>
+    <h4 id="pad-room-name"></h4>
+    <div class="pad">
+        <div class="row h-100">
+            <div id="btn-A" class="col-6 pad-cell">
+                <div class="jumbotron h-100 vertical-align bg-success"><h1 class="text-white text-center">A</h1></div>
+            </div>
+            <div id="btn-B" class="col-6 pad-cell">
+                <div class="jumbotron h-100 vertical-align bg-danger"><h1 class="text-white text-center">B</h1></div>
+            </div>
+            <div id="btn-C" class="col-6 pad-cell">
+                <div class="jumbotron h-100 vertical-align bg-info"><h1 class="text-white text-center">C</h1></div>
+            </div>
+            <div id="btn-D" class="col-6 pad-cell">
+                <div class="jumbotron h-100 vertical-align bg-warning"><h1 class="text-center">D</h1></div>
+            </div>
         </div>
     </div>
 </div>
-
+<canvas id="particleCanvas" style="display:none;"></canvas>
 </body>
 </html>

@@ -1,13 +1,90 @@
 body, html {
     height: 100%;
+    overflow-x: hidden;
+    width: 100%;
+}
+
+.disabled {
+    pointer-events: none;
+}
+
+.enabled {
+    pointer-events: auto;
+}
+
+.center-col {
+    align-items: center;
+    justify-content: center;
+    display: inline-flex;
 }
 
 .alerts-container {
     position: fixed;
     z-index: 1000;
+    margin-top: 1em;
+    pointer-events: none;
 }
 
-/* navigation bar */
+.alert button {
+    pointer-events: auto;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.vertical-align {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+}
+
+.slider-selection {
+    background: #BABABA;
+}
+
+.in {
+    opacity: .9;
+}
+
+.navbar {
+    z-index: 2;
+}
+
+.jumbotron {
+    background-color: rgba(227, 227, 227, 0.75);
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+    margin-top: 3rem;
+}
+
+.vertical-align .jumbotron {
+    margin: 0;
+}
+
+.btn-back {
+    cursor: pointer;
+    position: absolute;
+}
+
+#particleCanvas {
+    pointer-events: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 99;
+}
+
+/* user info */
+
+#user {
+    position: absolute;
+    left: 1rem;
+    top: 1rem;
+    z-index: 200;
+}
 
 #user > a {
     padding: 0;
@@ -23,18 +100,20 @@ body, html {
 }
 
 .user-image-nav {
-    width: 42px;
-    height: 42px;
+    width: 42px !important;
+    height: 42px !important;
+}
+
+.user-image-nav svg {
+    width: 30px !important;
+    height: 30px !important;
+    margin: 6px !important;
 }
 
 .user-image-full {
     width: 70px;
     height: 70px;
     margin-right: .5rem;
-}
-
-.navbar-nav .dropdown-menu {
-    position: absolute;
 }
 
 /* menu view */
@@ -55,19 +134,44 @@ body, html {
 
 /* room view */
 
+.room-progress {
+    height: 1.1rem;
+}
+
+.room-progress > div {
+    opacity: 0.7;
+}
+
+.room-progress > span {
+    font-weight: bold;
+    text-shadow: 1px 1px white;
+}
+
+.timer-progress {
+    height: 1.1rem;
+}
+
+.member-card-holder {
+    margin: 0 0 5% 0;
+}
+
 .member-card {
     padding: 1%;
-    margin: 0 0 5% 0;
+    margin: 0;
     cursor: pointer;
 }
 
-.member-card img {
-    margin-top: 7%;
+.member-card .user-image-nav {
+    margin: 7% auto auto;
 }
 
 .answer {
     margin-bottom: 2%;
     pointer-events: none;
+}
+
+.answer > div {
+    white-space: normal;
 }
 
 .room-button {
@@ -87,6 +191,42 @@ body, html {
     opacity: 1;
 }
 
+#room-camera {
+    -moz-transform: scale(-1, 1);
+    -webkit-transform: scale(-1, 1);
+    -o-transform: scale(-1, 1);
+    -ms-transform: scale(-1, 1);
+    transform: scale(-1, 1);
+}
+
+.custom-range {
+    width: inherit;
+}
+
+#transparencyControlDiv {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    z-index: 200;
+    text-align: right;
+}
+
+.cameraVideo, #room-camera {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    object-fit: cover;
+    z-index: -200;
+    width: 100%;
+    height: 100%;
+}
+
+#chart {
+    height: 8rem;
+}
+
 /* questions view */
 
 .btn-delete {
@@ -94,8 +234,59 @@ body, html {
     cursor: pointer;
 }
 
+.visibility-badge {
+    float: right;
+    margin-right: 1rem;
+}
+
+.pack-btn {
+    margin-bottom: 1rem;
+}
+
+#questions-view input.form-control, #texts-view input.form-control {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
 /* pad view */
+
+.pad {
+    position: fixed;
+    top: 70px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+#btn-last-answer {
+    position: absolute;
+    left: 1rem;
+    top: 1rem;
+}
+
+#btn-quit {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+}
+
+#pad-room-name {
+    position: absolute;
+    width: 100%;
+    z-index: -999;
+    top: 1rem;
+    text-align: center;
+}
+
+.pad .row {
+    margin: 0;
+}
 
 .pad-cell {
     cursor: pointer;
+    height: 45%;
+}
+
+.pad-cell .jumbotron {
+    margin: 0;
 }

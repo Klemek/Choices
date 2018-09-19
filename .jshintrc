@@ -1,0 +1,51 @@
+{
+  // Options
+  "esversion": 6,
+  "maxerr": 999,
+  "indent": true,
+  "camelcase": true,
+  "eqeqeq": true,
+  "forin": true,
+  "immed": true,
+  "latedef": true,
+  "noarg": true,
+  "noempty": true,
+  "nonew": true,
+  "undef": true,
+  "unused": true,
+  "varstmt": true,
+  "sub": true,
+  "quotmark": "single",
+  "browser": true,
+  "devel": true,
+  "jquery": true,
+  /*
+   * Globals
+   */
+  "globals": {
+    "$": false,
+    "MathJax": false,
+    "XLSX": false,
+
+    "Cam2Canvas": true,
+    "QRCode": true,
+    "Decoder": true,
+    "Detector": true,
+    "FinderPatternFinder": true,
+    "FinderPattern": true,
+    "cards": true,
+
+    "globals": true,
+    "utils": true,
+    "ajax": true,
+    "lang": true,
+    "cookies": true,
+    "mapping": true,
+    "ui": true,
+    "room": true,
+    "padRoom": true,
+    "questions": true,
+    "camera": true,
+    "particles": true
+  }
+}

@@ -1,64 +1,39 @@
 package uk.ac.port.choices.api;
 
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import uk.ac.port.choices.TestUtils;
 import uk.ac.port.choices.dao.QuestionPackDao;
-import uk.ac.port.choices.model.Question;
+import uk.ac.port.choices.dao.TestUtilsDao;
 import uk.ac.port.choices.model.QuestionPack;
 import uk.ac.port.choices.oauth2.Oauth2CallbackServlet;
-import uk.ac.port.choices.utils.Utils;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-
-@RunWith(PowerMockRunner.class)
-@PowerMockIgnore({"java.*", "javax.*", "org.*"})
-@PrepareForTest({Utils.class})
 public class QuestionsServletTest {
 
-    private static final String ADMINEMAIL = "adminemail";
-    private QuestionPack pack;
 
-    @BeforeClass
-    public static void setUpClass() {
-        assertTrue(TestUtils.setUpLocalDatastore());
-        for (QuestionPack questionPack : QuestionPackDao.listQuestionPacks()) {
-            QuestionPackDao.deleteQuestionPack(questionPack);
-        }
-    }
+    private QuestionPack pack;
 
     @Before
     public void setUp() {
-        PowerMockito.spy(Utils.class);
-        when(Utils.isAdmin(anyString())).thenReturn(false);
-        when(Utils.isAdmin(eq(QuestionsServletTest.ADMINEMAIL))).thenReturn(true);
-
-        Question question = new Question("What is 1+1", "hint", new String[]{"1", "2", "3", "4"});
-        List<Question> questionList = new ArrayList<>();
-        questionList.add(question);
-
-        pack = new QuestionPack("name", questionList);
-
+        pack = new QuestionPack("name", "video", "message", true, Arrays.asList(TestUtils.question));
         QuestionPackDao.createQuestionPack(pack);
     }
 
@@ -79,7 +54,7 @@ public class QuestionsServletTest {
         HttpServletRequest request = TestUtils.createMockRequest("OPTIONS", "", null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new RoomServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
     }
 
@@ -91,7 +66,7 @@ public class QuestionsServletTest {
 
         new RoomServlet().service(request, response);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
 
         assertEquals(401, res.getInt("code"));
     }
@@ -101,18 +76,25 @@ public class QuestionsServletTest {
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
 
+        //add disabled pack
+        QuestionPack pack2 = new QuestionPack("name2", "video", "message", false, Arrays.asList(TestUtils.question));
+        QuestionPackDao.createQuestionPack(pack2);
+
         StringWriter writer = new StringWriter();
 
         HttpServletRequest request = TestUtils.createMockRequest("GET", "/api/questions/list", null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new QuestionsServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
         JSONArray list = res.getJSONArray("value");
         assertEquals(1, list.length());
         JSONObject json = list.getJSONObject(0);
         assertEquals((long) pack.getId(), json.getLong("id"));
         assertEquals(pack.getName(), json.getString("name"));
+        assertEquals(1, json.getInt("questionCount"));
+
+        QuestionPackDao.deleteQuestionPack(pack2);
     }
 
     @Test
@@ -125,7 +107,7 @@ public class QuestionsServletTest {
         HttpServletRequest request = TestUtils.createMockRequest("GET", "/api/questions/all", null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new QuestionsServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(403, res.getInt("code"));
     }
 
@@ -133,14 +115,14 @@ public class QuestionsServletTest {
     public void testListPackFull() {
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
-        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, QuestionsServletTest.ADMINEMAIL);
+        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, TestUtils.ADMIN_EMAIL);
 
         StringWriter writer = new StringWriter();
 
         HttpServletRequest request = TestUtils.createMockRequest("GET", "/api/questions/all", null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new QuestionsServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
         JSONArray list = res.getJSONArray("value");
         assertEquals(1, list.length());
@@ -160,7 +142,7 @@ public class QuestionsServletTest {
         HttpServletRequest request = TestUtils.createMockRequest("PUT", "/api/questions/create", null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new QuestionsServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(403, res.getInt("code"));
     }
 
@@ -168,7 +150,7 @@ public class QuestionsServletTest {
     public void testCreatePackBadRequest() {
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
-        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, QuestionsServletTest.ADMINEMAIL);
+        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, TestUtils.ADMIN_EMAIL);
 
         Map<String, String> params = new HashMap<>();
         params.put("name", pack.getName());
@@ -178,7 +160,7 @@ public class QuestionsServletTest {
         HttpServletRequest request = TestUtils.createMockRequest("PUT", "/api/questions/create", params, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new QuestionsServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(400, res.getInt("code"));
     }
 
@@ -188,18 +170,21 @@ public class QuestionsServletTest {
 
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
-        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, QuestionsServletTest.ADMINEMAIL);
+        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, TestUtils.ADMIN_EMAIL);
 
         Map<String, String> params = new HashMap<>();
         params.put("name", pack.getName());
-        params.put("questions", String.format("[%s]", pack.getQuestions().get(0).toJSON()));
+        params.put("video", pack.getVideo());
+        params.put("message", pack.getMessage());
+        params.put("enabled", "" + pack.isEnabled());
+        params.put("questions", String.format("[%s]", pack.getQuestions().get(0).toJson()));
 
         StringWriter writer = new StringWriter();
 
         HttpServletRequest request = TestUtils.createMockRequest("PUT", "/api/questions/create", params, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new QuestionsServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
 
         JSONObject value = res.getJSONObject("value");
@@ -221,7 +206,7 @@ public class QuestionsServletTest {
         HttpServletRequest request = TestUtils.createMockRequest("GET", "/api/questions/1234", null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new QuestionsServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(403, res.getInt("code"));
     }
 
@@ -229,14 +214,14 @@ public class QuestionsServletTest {
     public void testGetPackDetails() {
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
-        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, QuestionsServletTest.ADMINEMAIL);
+        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, TestUtils.ADMIN_EMAIL);
 
         StringWriter writer = new StringWriter();
 
         HttpServletRequest request = TestUtils.createMockRequest("GET", "/api/questions/" + pack.getId(), null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new QuestionsServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
         assertEquals(pack.getName(), res.getJSONObject("value").getString("name"));
     }
@@ -245,14 +230,14 @@ public class QuestionsServletTest {
     public void testGetPackDetailsNotFound() {
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
-        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, QuestionsServletTest.ADMINEMAIL);
+        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, TestUtils.ADMIN_EMAIL);
 
         StringWriter writer = new StringWriter();
 
         HttpServletRequest request = TestUtils.createMockRequest("GET", "/api/questions/1234", null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new QuestionsServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(404, res.getInt("code"));
     }
 
@@ -266,7 +251,7 @@ public class QuestionsServletTest {
         HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/questions/1234", null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new QuestionsServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(403, res.getInt("code"));
     }
 
@@ -274,14 +259,14 @@ public class QuestionsServletTest {
     public void testUpdatePackNotFound() {
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
-        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, QuestionsServletTest.ADMINEMAIL);
+        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, TestUtils.ADMIN_EMAIL);
 
         StringWriter writer = new StringWriter();
 
         HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/questions/1234", null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new QuestionsServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(404, res.getInt("code"));
     }
 
@@ -289,7 +274,7 @@ public class QuestionsServletTest {
     public void testUpdatePackBadRequest() {
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
-        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, QuestionsServletTest.ADMINEMAIL);
+        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, TestUtils.ADMIN_EMAIL);
 
         Map<String, String> params = new HashMap<>();
         params.put("name", pack.getName());
@@ -299,7 +284,7 @@ public class QuestionsServletTest {
         HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/questions/" + pack.getId(), params, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new QuestionsServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(400, res.getInt("code"));
     }
 
@@ -307,22 +292,28 @@ public class QuestionsServletTest {
     public void testUpdatePack() {
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
-        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, QuestionsServletTest.ADMINEMAIL);
+        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, TestUtils.ADMIN_EMAIL);
 
         Map<String, String> params = new HashMap<>();
         params.put("name", "name2");
-        params.put("questions", String.format("[%s]", pack.getQuestions().get(0).toJSON()));
+        params.put("video", "video2");
+        params.put("message", "message2");
+        params.put("enabled", "false");
+        params.put("questions", String.format("[%s]", pack.getQuestions().get(0).toJson()));
 
         StringWriter writer = new StringWriter();
 
         HttpServletRequest request = TestUtils.createMockRequest("POST", "/api/questions/" + pack.getId(), params, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new QuestionsServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
 
         pack = QuestionPackDao.getQuestionPackById(pack.getId());
         assertEquals("name2", pack.getName());
+        assertEquals("video2", pack.getVideo());
+        assertEquals("message2", pack.getMessage());
+        assertFalse(pack.isEnabled());
     }
 
     @Test
@@ -335,7 +326,7 @@ public class QuestionsServletTest {
         HttpServletRequest request = TestUtils.createMockRequest("DELETE", "/api/questions/1234", null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new QuestionsServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(403, res.getInt("code"));
     }
 
@@ -343,14 +334,14 @@ public class QuestionsServletTest {
     public void testDeletePackNotFound() {
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
-        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, QuestionsServletTest.ADMINEMAIL);
+        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, TestUtils.ADMIN_EMAIL);
 
         StringWriter writer = new StringWriter();
 
         HttpServletRequest request = TestUtils.createMockRequest("DELETE", "/api/questions/1234", null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new QuestionsServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(404, res.getInt("code"));
     }
 
@@ -358,16 +349,22 @@ public class QuestionsServletTest {
     public void testDeletePack() {
         Map<String, Object> session = new HashMap<>();
         session.put(Oauth2CallbackServlet.SESSION_USER_ID, "userid");
-        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, QuestionsServletTest.ADMINEMAIL);
+        session.put(Oauth2CallbackServlet.SESSION_USER_EMAIL, TestUtils.ADMIN_EMAIL);
 
         StringWriter writer = new StringWriter();
 
         HttpServletRequest request = TestUtils.createMockRequest("DELETE", "/api/questions/" + pack.getId(), null, null, session);
         HttpServletResponse response = TestUtils.createMockResponse(writer);
         new QuestionsServlet().service(request, response);
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(200, res.getInt("code"));
 
         assertNull(QuestionPackDao.getQuestionPackById(pack.getId()));
+    }
+
+    @BeforeClass
+    public static void setUpClass() {
+        assertTrue(TestUtils.prepareTestClass(true));
+        TestUtilsDao.deleteAllQuestionPack();
     }
 }

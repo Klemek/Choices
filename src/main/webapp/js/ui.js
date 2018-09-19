@@ -1,140 +1,269 @@
-var ui = {
+/* exported ui */
+const ui = {
+    documentReady: false,
+    langReady: false,
+    userReady: false,
+    /**
+     * If the ui is ready to init
+     * @returns {boolean}
+     */
+    isReady: function () {
+        return ui.documentReady && ui.langReady && ui.userReady;
+    },
+    /**
+     * State that the document is loaded
+     */
+    setDocumentReady: function () {
+        console.log('Document is ready');
+        ui.documentReady = true;
+        if (ui.isReady())
+            ui.initUI();
+    },
+    /**
+     * State that the lang is loaded
+     */
+    setLangReady: function () {
+        console.log('Lang is ready');
+        ui.langReady = true;
+        if (ui.isReady())
+            ui.initUI();
+    },
+    /**
+     * State that the user is loaded
+     */
+    setUserReady: function () {
+        console.log('User is ready');
+        ui.userReady = true;
+        if (ui.isReady())
+            ui.initUI();
+    },
+    /**
+     * Init ui
+     */
     initUI: function () {
+        if (!ui.isReady())
+            return;
         ui.registerEvents();
+
+        document.title = lang.getString('titleMain');
+        $('#lang-text-title').html(lang.getString('titleMain'));
+        $('.lang-text').each(function () {
+            const key = $(this).text().trim();
+            $(this).html(lang.getString(key));
+        });
+        $('#roomid').attr('placeholder', lang.getString('inputRoomId'));
 
         if (jQuery.browser.mobile) {
             //hide room creation
             $('#div-create-room').hide();
-            $('#div-join-room').attr("class", "col-12");
-        } else {
-
-            //populate room creation window
-            ui.checkbox.create('#form-create-checkboxes', 'cbAnswers', false, 'Show user\'s answers');
-            ui.checkbox.create('#form-create-checkboxes', 'cbStats', true, 'Always show statistics');
-            ui.checkbox.create('#form-create-checkboxes', 'cbLock', false, 'Lock room at start');
-            ui.checkbox.create('#form-create-checkboxes', 'cbRefresh', true, 'Automatically refresh content');
+            $('#div-join-room').attr('class', 'col-12');
         }
 
         ui.registerCards();
     },
-    addAlert: function (type, text) {
+    /**
+     * Show an alert on screen
+     * @param {string} type
+     * @param {string} text
+     */
+    alert: function (type, text) {
+        const id = utils.randInt(0, 1e8);
         $('#alerts').append('' +
-            '<div class="alert alert-' + type + ' alert-dismissible w-100 fade show">' +
+            '<div id="alert-' + id + '" style="display:none" class="alert alert-' + type + ' alert-dismissible w-100 fade show">' +
             '<button type="button" class="close" data-dismiss="alert">&times;</button>' + text + '' +
             '</div>');
-        var alert = $('#alerts:last-child');
-        alert.hide().fadeIn();
-        setTimeout(function(){
-            alert.fadeOut(400, function(){
-                alert.remove();
-            });
-        },5000);
+        const alert = $('#alert-' + id);
+        alert.stop(true).fadeTo(400, 1).delay(5000).fadeOut(400, function () {
+            alert.remove();
+        });
     },
+    /**
+     * Update the current user's info in the screen
+     * @param {{userId: String, userName: String, userEmail: String, userImageUrl: String, admin: boolean}} data - result from request
+     */
     setCurrentUser: function (data) {
         $('#user')
             .show()
-            .attr("title", data.userName);
+            .attr('title', data.userName);
         $('.user-name').text(data.userName);
         $('.user-mail').text(data.userEmail);
-        $('.user-image-nav').attr("src", data.userImageUrl + "sz=42");
-        $('.user-image-full').attr("src", data.userImageUrl + "sz=70");
+        $('.user-image-nav').attr('src', data.userImageUrl + 'sz=42');
+        $('.user-image-full').attr('src', data.userImageUrl + 'sz=70');
 
-        if (data.admin) {
-            $('#btn-questions').show();
-        }
+        if (data.admin)
+            ui.initAdminUi();
+
+        ui.setUserReady();
     },
+    /**
+     * Register all events
+     */
     registerEvents: function () {
-        $("#btn-logout").click(function () {
-            window.location.href = "/logout";
+        $('#btn-logout').click(function () {
+            cookies.clear();
+            window.location.href = globals.appPath + '/logout';
         });
 
-        //main menu
-        $("#btn-new").click(room.precreate);
-        $("#btn-questions").click(questions.load);
-        $("#btn-join").click(function () {
-            var input = $('#roomid');
-            var tmproomid = input.val();
+        //load main menu view events
+        $('#btn-new').click(function () {
+            room.precreate(function () {
+                utils.setPage(lang.getString('titleRoomCreate'), 'create');
+
+                const setSize = $('#set-size');
+                setSize.text(globals.setSizeDefault);
+                $('#btn-set-minus').click(function () {
+                    const currSize = parseInt(setSize.text());
+                    if (currSize > globals.setSizeMin)
+                        setSize.text(currSize - globals.setSizeStep);
+                });
+                $('#btn-set-plus').click(function () {
+                    const currSize = parseInt(setSize.text());
+                    setSize.text(currSize + globals.setSizeStep);
+                });
+
+
+                //load create view events
+                $('#btn-create').click(function () {
+                    room.create(
+                        $('#question-pack').val(),
+                        parseInt(setSize.text()),
+                        $('#cbLock').is(':checked'),
+                        $('#cbRefresh').is(':checked'),
+                        function () {
+                            //load room view events
+                            $('#btn-next').click(function () {
+                                ui.room.killTimer();
+                                room.next();
+                            });
+                            $('#btn-refresh').click(room.ajaxRefresh);
+                            $('#btn-auto-refresh').click(room.changeAutoRefresh);
+                            $('#btn-lock').click(room.changeLock);
+                            $('#btn-delete').click(room.delete);
+
+                            utils.loadMathJax();
+                            $.getMultiScripts(globals.roomScripts);
+                            if (typeof particles === 'undefined')
+                                $.getScript('js/particles.js').done(function () {
+                                    particles.init('particleCanvas');
+                                });
+
+                            if ($('#cbCamera').is(':checked')) {
+                                $.getMultiScripts(globals.cameraScripts)
+                                    .done(function () {
+                                        camera.init($('#room-camera'));
+                                        $('#transparencyControlDiv').show();
+                                        $('#transparencyControl').on('input', function () {
+                                            const value = $(this).val();
+                                            const label = $('#transparencyControlLabel');
+                                            ui.room.changeOpacity(value);
+                                            label.html('&nbsp;Opacity: ' + (value * 100).toFixed(0) + '%');
+                                            label.stop(true).fadeTo(100, 1).delay(1000).fadeOut(400, function () {
+                                                label.hide();
+                                            });
+                                        });
+                                    });
+                            }
+                        }
+                    );
+                });
+                $('#btn-cancel').click(function () {
+                    ui.views.showView('menu');
+                    utils.setPage(lang.getString('titleMain'));
+                });
+            });
+        });
+        $('#btn-join').click(function () {
+            const input = $('#roomid');
+            const tmproomid = input.val();
             input.val('');
             if (tmproomid && tmproomid.length > 0) {
-                room.join(tmproomid, true);
+                padRoom.join(tmproomid.toLowerCase(), true);
             }
         });
+        //when validate on room id
         $('#roomid').keypress(function (e) {
             if (e.which === 13) {
-                $("#btn-join").click();
+                $('#btn-join').click();
             }
         });
-
-        //create view
-        $("#btn-create").click(function () {
-            room.create(
-                $("#question-pack").val(),
-                ui.checkbox.value('cbAnswers'),
-                ui.checkbox.value('cbStats'),
-                ui.checkbox.value('cbLock'),
-                ui.checkbox.value('cbRefresh')
-            );
-        });
-        $("#btn-cancel").click(function () {
+        //back buttons events
+        $('.btn-back').click(function () {
             ui.views.showView('menu');
-        });
-
-        //room view
-        $("#btn-next").click(room.next);
-        $("#btn-refresh").click(room.ajaxRefresh);
-        $("#btn-auto-refresh").click(room.changeAutoRefresh);
-        $('#btn-lock').click(room.changeLock);
-        $('#btn-stats').click(room.changeStats);
-        $("#btn-delete").click(room.delete);
-
-        //questions view
-        $('#btn-create-pack').click(questions.new);
-
-        //pad view
-        $("#btn-a").click(function () {
-            room.answerQuestion(1);
-        });
-        $("#btn-b").click(function () {
-            room.answerQuestion(2);
-        });
-        $("#btn-c").click(function () {
-            room.answerQuestion(3);
-        });
-        $("#btn-d").click(function () {
-            room.answerQuestion(4);
+            utils.setPage(lang.getString('titleMain'));
         });
     },
+    /**
+     * Register cards to interact when opened
+     */
     registerCards: function () {
-        $(".card-link").each(function () {
+        $('.card-link').each(function () {
+            $(this).unbind('click');
             $(this).click(function () {
-                var icon = $(this).find('svg');
-                if (icon.hasClass("fa-chevron-circle-right")) {
+                const icon = $(this).find('i');
+                if (icon.hasClass('fa-chevron-circle-right')) {
                     icon
-                        .removeClass("fa-chevron-circle-right")
-                        .addClass("fa-chevron-circle-down");
-                } else if (icon.hasClass("fa-chevron-circle-down")) {
+                        .removeClass('fa-chevron-circle-right')
+                        .addClass('fa-chevron-circle-down');
+                } else if (icon.hasClass('fa-chevron-circle-down')) {
                     icon
-                        .removeClass("fa-chevron-circle-down")
-                        .addClass("fa-chevron-circle-right");
+                        .removeClass('fa-chevron-circle-down')
+                        .addClass('fa-chevron-circle-right');
                 }
             });
         });
     },
-    loadQuestionPacks: function(packs){
-        packs.forEach(function(pack){
-           $('#question-pack').append('<option value="'+pack.id+'">'+pack.name+'</option>');
+    /**
+     * Load question packs list to "create" view
+     * @param {{id:int,name:string,questionCount:int}[]} packs
+     */
+    loadQuestionPacks: function (packs) {
+        $('#question-pack').html('');
+        packs.forEach(function (pack) {
+            $('#question-pack').append('<option value="' + pack.id + '" title="' + pack.questionCount + '">' + pack.name + ' (' + pack.questionCount + ' questions)</option>');
         });
     },
+    /**
+     * Click a button from the menu
+     * @param {string} name
+     */
+    goToView: function (name) {
+        switch (name) {
+            case 'create':
+                $('#btn-new').click();
+                return;
+            case 'questions':
+                $('#btn-questions').click();
+                return;
+            case 'texts':
+                $('#btn-texts').click();
+                return;
+        }
+    },
     views: {
-        views: ['menu', 'room', 'pad', 'create', 'questions'],
+        views: ['menu', 'room', 'pad', 'create'],
+        /**
+         * Show a specific view
+         * @param {string} name
+         */
         showView: function (name) {
             this.hideAll();
             $('#' + name + '-view').show();
+            if (name === 'pad') {
+                $('#user').hide();
+            } else {
+                $('#user').show();
+            }
         },
+        /**
+         * Show loading view
+         */
         loading: function () {
             this.hideAll();
             $('#loading').show();
         },
+        /**
+         * Hide all views
+         */
         hideAll: function () {
             $('#alerts').html('');
             this.views.forEach(function (name) {
@@ -143,391 +272,488 @@ var ui = {
             $('#loading').hide();
         }
     },
-    checkbox: {
-        create: function (parent, id, checked, text) {
-            $(parent).append('' +
-                '<h4 id="' + id + '" class="custom-checkbox">' +
-                '<i class="far fa-' + (checked ? 'check-' : '') + 'square"></i>&nbsp;' + text + '' +
-                '</h4>');
-            $('#' + id).click(function () {
-                var icon = $(this).find('svg');
-                if (icon.hasClass("fa-check-square")) {
-                    icon
-                        .removeClass("fa-check-square")
-                        .addClass("fa-square");
-                } else {
-                    icon
-                        .removeClass("fa-square")
-                        .addClass("fa-check-square");
+    room: {
+        timer: undefined,
+        timeLeft: undefined,
+        /**
+         * Update the room view
+         * @param {string} id
+         * @param {boolean} lock
+         * @param {string} state
+         * @param {{text:string,answers:string[],links:string[]}} [question]
+         * @param {int} [round]
+         * @param {string} [packName]
+         */
+        updateView: function (id, lock, state, question, round, packName) {
+            $('#room-name').html('Room <u>' + id + '</u>' + (lock ? '&nbsp;<i class="fas fa-lock" title="room locked"></i>' : ''));
+            ui.room.setLock(!lock);
+
+            const roomText = $('#room-text');
+            const btnNext = $('#btn-next');
+            const answers = $('#answers');
+            switch (state) {
+                case 'REGISTERING':
+                    roomText.html('<i class="fas fa-spinner fa-spin"></i>&nbsp;' + lang.getString('stateRegistering'));
+                    btnNext.text(lang.getString('btnNextRegistering'));
+                    answers.hide();
+                    break;
+                case 'VIDEO':
+                    roomText.html('<i class="fas fa-video"></i>&nbsp;' + lang.getString('stateVideo'));
+                    btnNext.text(lang.getString('btnNextVideo'));
+                    answers.hide();
+                    break;
+                case 'ANSWERING':
+                    roomText.html('<small><i class="fas fa-question-circle"></i>&nbsp;<small>[' + packName + ']</small>&nbsp;Question ' + (round + 1) + ' :</small><br/>' + question.text);
+                    btnNext.text(lang.getString('btnNextAnswers'));
+                    answers.show();
+                    break;
+                case 'RESULTS':
+                    roomText.html('<small><i class="fas fa-info-circle"></i>&nbsp;<small>[' + packName + ']</small>&nbsp;Question ' + (round + 1) + ' :</small><br/>' + question.text);
+                    btnNext.text(lang.getString('btnNextResults'));
+                    answers.show();
+                    break;
+                case 'VOTE':
+                    roomText.html('<i class="fas fa-chalkboard-teacher"></i>&nbsp;' + lang.getString('stateVote'));
+                    btnNext.text(lang.getString('btnNextResults'));
+                    answers.show();
+                    break;
+                case 'HELPVIDEO':
+                    roomText.html('<i class="fas fa-video"></i>&nbsp;' + lang.getString('stateHelpVideo'));
+                    btnNext.text(lang.getString('btnNextResults'));
+                    answers.hide();
+                    break;
+                case 'CLOSED':
+                    roomText.html('<i class="fas fa-check-circle"></i>&nbsp;' + lang.getString('stateClosed'));
+                    btnNext.text(lang.getString('btnNextFinished'));
+                    answers.hide();
+                    break;
+            }
+
+            Object.keys(mapping.nameToEffect).forEach(function (effect) {
+                if (roomText.html().includes('<' + effect + '>')) {
+                    particles.show(globals.particlesTime, mapping.nameToEffect[effect]);
                 }
             });
         },
-        value: function (id) {
-            return $('#' + id).find('svg').hasClass("fa-check-square");
-        }
-    },
-    room: {
-        updateView: function (id, lock, text, btnNext, showAnswers, hint) {
-            $("#room-name").html("Room " + id + (lock ? '&nbsp;<i class="fas fa-lock" title="room locked"></i>' : ''));
-            $("#room-text").html(text);
-
-            if (hint && hint.length > 0) {
-                $('#hintDiv').show();
-                $('#hint').html(hint);
-            } else {
-                $('#hintDiv').hide();
-            }
-            if (btnNext)
-                $('#btn-next').text(btnNext);
-            else
-                $('#btn-next').addClass('disabled').text('Finished');
-
-            if (showAnswers)
-                $("#answers").show();
-            else
-                $("#answers").hide();
+        /**
+         * Hide answers on screen
+         */
+        hideAnswers: function () {
+            $('#answers').hide();
         },
+        /**
+         * Edit room text but keep current fontawesome icon at start
+         * @param {string} text
+         */
+        changeRoomText: function (text) {
+            const roomText = $('#room-text');
+            const classes = $(roomText.find('i')).attr('class');
+            roomText.html('<i class="' + classes + '"></i>&nbsp;' + text);
+            Object.keys(mapping.nameToEffect).forEach(function (effect) {
+                if (text.includes('<' + effect + '>')) {
+                    particles.show(globals.particlesTime, mapping.nameToEffect[effect]);
+                }
+            });
+        },
+        /**
+         * Change availability of lock button
+         * @param {boolean} lock
+         */
+        lockNextButton: function (lock) {
+            const btnNext = $('#btn-next');
+            if (lock)
+                btnNext.addClass('disabled');
+            else
+                btnNext.removeClass('disabled');
+        },
+        /**
+         * Update an answer
+         * @param {string} ans - letter
+         * @param {boolean} plain
+         * @param {string} text
+         * @param {int | undefined} [answered]
+         * @param {int | undefined} [total]
+         */
         updateAnswer: function (ans, plain, text, answered, total) {
-            var html = ans + " : " + text;
+            let html = ans + ' : ' + text;
             if (answered !== undefined) {
-                var percent = total <= 0 ? 0 : (100 * (answered / total)).toFixed(0);
+                const percent = total <= 0 ? 0 : (100 * (answered / total)).toFixed(0);
                 html = percent + '% ' + html;
             }
             $('#answer-' + ans)
-                .attr("class", "btn btn-" + (plain ? '' : 'outline-') + mapping.letterToColor(ans) + " btn-block btn-lg h-100")
+                .attr('class', 'btn btn-' + (plain ? '' : 'outline-') + mapping.letterToColor(ans) + ' btn-block btn-lg h-100')
                 .html(html);
         },
-        finishView: function(){
-            window.updateMath();
-            setTimeout(function(){
-                var height = 0;
-                $('.answer').each(function(){
-                    if($(this).height()>height){
+        /**
+         * Update math + align answers
+         */
+        finishView: function () {
+            utils.updateMath();
+            const ans = $('.answer');
+            ans.each(function () {
+                $(this).attr('style', '');
+            });
+            setTimeout(function () {
+                let height = 0;
+                ans.each(function () {
+                    if ($(this).height() > height) {
                         height = $(this).height();
                     }
                 });
-                if(height){
-                    $('.answer').each(function(){
+                if (height) {
+                    ans.each(function () {
                         $(this).height(height);
                     });
                 }
             });
         },
+        /**
+         * Update autorefresh button
+         * @param {boolean} autoRefresh
+         */
         setAutoRefresh: function (autoRefresh) {
             if (autoRefresh) {
-                $('#btn-auto-refresh').html("<i class=\"far fa-check-square\"></i>&nbsp;Auto-Refresh");
+                $('#btn-auto-refresh').html('<i class="fas fa-check-square"></i>&nbsp;' + lang.getString('btnAutoRefresh'));
                 $('#btn-refresh').addClass('disabled');
             } else {
-                $('#btn-auto-refresh').html("<i class=\"far fa-square\"></i>&nbsp;Auto-Refresh");
+                $('#btn-auto-refresh').html('<i class="fas fa-square"></i>&nbsp;' + lang.getString('btnAutoRefresh'));
                 $('#btn-refresh').removeClass('disabled');
             }
         },
+        /**
+         * Update lock button and icon next to room name
+         * @param {boolean} lock
+         */
         setLock: function (lock) {
-            $('#btn-lock').html('<i class="fas fa-lock' + (lock ? '' : '-open') + '"></i>&nbsp;' + (lock ? 'Lock' : 'Unlock'));
+            $('#room-name').html('Room <u>' + room.id + '</u>' + (!lock ? '&nbsp;<i class="fas fa-lock" title="room locked"></i>' : ''));
+            $('#btn-lock').html('<i class="fas fa-lock' + (lock ? '' : '-open') + '"></i>&nbsp;' + (lock ? lang.getString('btnLock') : lang.getString('btnUnlock')));
         },
-        setStats: function(stats){
-            $('#btn-stats').html('<i class="fas fa-eye'+(stats?'':'-slash')+'"></i>&nbsp;Statistics');
-        },
-        disableStats: function(disabled){
-            if(disabled)
-                $('#btn-stats').addClass('disabled');
-            else
-                $('#btn-stats').removeClass('disabled');
-        },
+        /**
+         * Clear all members from view
+         */
         clearMembers: function () {
-            $("#members").html("");
+            $('#members').html('');
         },
+        /**
+         * Add a new member
+         * @param {{id:string,name:string,imageUrl:string,answer:int,generated:boolean}} member
+         */
         addMember: function (member) {
-            member.imageUrl = member.imageUrl.split('sz=')[0];
-            var html = '' +
-                '<div id="' + member.id + '" class="col-4" title="kick ' + member.name + '">' +
+
+            const imageUrl = member.imageUrl.split('sz=')[0];
+
+            const html = '' +
+                '<div id="' + member.id + '" class="col-4 col-md-3 col-lg-2 member-card-holder" title="kick ' + member.name + '">' +
                 '<div class="jumbotron h-100 bg-dark member-card text-center text-white">' +
                 '<div class="text-danger btn-kick"><i class="fas fa-times"></i></div>' +
-                '<img class="rounded-circle" src="' + member.imageUrl + 'sz=42"/>' +
+                (member.generated ?
+                    '<div class="user-image-nav rounded-circle"></div>' :
+                    '<img class="user-image-nav rounded-circle" src="' + imageUrl + 'sz=42"/>') +
                 '<h4><small>' + member.name + '</small></h4>' +
                 '</div></div>';
-            $("#members").append(html);
-            $("#" + member.id).click(function () {
+            $('#members').append(html);
+            $('#' + member.id).click(function () {
                 room.kick(member.id, member.name);
             });
         },
-        setMemberBg: function (memberId, bg) {
-            var card = $('#' + memberId + ' .member-card');
-            card.removeClass(function (index, className) {
-                return (className.match(/(^|\s)bg-\S+/g) || []).join(' ');
-            });
-            card.addClass("bg-" + bg);
+        /**
+         * Change a member background
+         * @param {string} memberId
+         * @param {string} bg - color
+         * @param {boolean} [flash]
+         */
+        setMemberBg: function (memberId, bg, flash) {
+            const card = $('#' + memberId + ' .member-card');
+            if (!card.is(':animated')) {
+                card.removeClass(function (index, className) {
+                    return (className.match(/(^|\s)bg-\S+/g) || []).join(' ');
+                });
+                card.css('background-color', '');
+                if (flash) {
+                    const body = $('body');
+                    card.css('background-color', body.css('--light'));
+                    card.animate({
+                        backgroundColor: body.css('--' + bg)
+                    }, 300);
+                } else {
+                    card.addClass('bg-' + bg);
+                }
+            }
         },
-        closeHint: function () {
-            var link = $("#hintLink");
-            if (link.find('svg').hasClass("fa-chevron-circle-down")) {
+        /**
+         * Update a camera member by setting its QR code preview
+         * @param {{id:string,answer:int}} member
+         */
+        updateCameraMember: function (member) {
+            let html;
+            if (member.answer === 0) {
+                html = '';
+            } else {
+                const matrix = cards[member.id - 1].matrix;
+                html = '' +
+                    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5 5">' +
+                    '<g transform="scale(-1,1) translate(-5 ,0) rotate(' + (member.answer * 90) + ', 2.5, 2.5)">';
+                for (let x = 0; x < 5; x++)
+                    for (let y = 0; y < 5; y++)
+                        html += '<rect x="' + x + '" y="' + y + '" width="1" height="1" style="fill:' + (matrix[x][y] ? 'black' : 'white') + '" />';
+                html += '</g></svg>';
+            }
+
+            $('#' + member.id).find('.user-image-nav').html(html);
+        },
+        /**
+         * Collapse the "extra" card
+         */
+        closeExtra: function () {
+            const link = $('#extraLink');
+            if (link.find('i').hasClass('fa-chevron-circle-down')) {
                 link.click();
             }
         },
-        showFinalResults: function(stats, members){
-            $('#hintLink').html('<i class="fas fa-chevron-circle-right"></i>&nbsp;Results');
-
-            $('#hint').append('' +
-                '<h3>Question results :</h3>' +
-                '<ul id="questionStats"></ul>');
-
-            stats.forEach(function(e, i){
-                var html = '<li><b>Question '+(i+1)+' : </b>';
-                var pa = e[2] <= 0 ? 0 : (100 * (e[0] / e[2])).toFixed(0);
-                html += 'Correct : '+pa+' % ';
-                if(e[1] !== e[2] && e[2] > 0){
-                    var pu = (100 * (1 - (e[1] / e[2]))).toFixed(0);
-                    html += '/ Unanswered : '+pu+' %';
-                }
-                html += '</li>';
-
-                $('#questionStats').append(html);
-            });
-
-            if(Object.keys(members).length > 0){
-                $('#hint').append('' +
-                    '<h3>Individual results :</h3>' +
-                    '<ul id="memberStats"></ul>');
-                var m = Object.keys(members).map(function(v) { return members[v]; });
-                m.sort(function(a,b){
-                   return b.correct - a.correct;
-                });
-                m.forEach(function(e){
-                    var pa = (100 * (e.correct / stats.length)).toFixed(0);
-                    $('#memberStats').append('<li><b>'+e.name+' : </b> Correct : '+e.correct+' ('+pa+' %)</li>');
-                });
-            }
-
-            $('#hintDiv').show();
-
-        }
-    },
-    questions: {
-        addPack: function (id, name, qs) {
-            var html = '' +
-                '<div id="' + id + 'c" class="card text-left"></div>';
-            $('#packs').append(html);
-            ui.questions.updatePack(id, name, qs);
+        /**
+         * Update room progress
+         * @param {number} val - in %
+         * @param {int} left - number of questions left
+         */
+        setRoomProgress: function (val, left) {
+            $('#room-progress-container').show();
+            $('#room-progress').css('width', val + '%');
+            $('#room-progress-text').text(lang.getString('labelProgress').format(val.toFixed(0), left));
         },
-        updatePack: function (id, name, qs, open) {
-            var html = '' +
-                '<div class="card-header">' +
-                '<a class="card-link" data-toggle="collapse" href="#' + id + '"><i class="fas fa-chevron-circle-right"></i>&nbsp;' + (name ? name : 'New question pack') + '</a>' +
-                '<span title="delete" class="btn-delete text-danger"><i class="fas fa-times"></i></span>' +
-                '</div>' +
-                '<div id="' + id + '" class="collapse" data-parent="#packs">' +
-                '<div class="card-body">' +
-                '<div class="form-group row">' +
-                '<label class="col-1 col-form-label"><i class="fas fa-edit" title="Pack name"></i></label>' +
-                '<div class="col-11"><input type="text" class="form-control" id="' + id + 'n" placeholder="Pack name" value="' + (name ? name : '') + '"></div>' +
-                '</div>' +
-                '<div class="pack-questions"></div><br/>' +
-                '<div class="row">' +
-                '<div class="col-6"><button class="btn btn-primary btn-block"><i class="fas fa-sync"></i>&nbsp;Save</button></div>' +
-                '<div class="col-6"><button class="btn btn-add btn-success btn-block"><i class="fas fa-plus"></i>&nbsp;New question</button>' +
-                '</div></div></div></div>';
-
-            var card = $('#' + id + 'c');
-
-            card.html(html);
-
-            if (qs)
-                qs.forEach(function (q, i) {
-                    ui.questions.addQuestion(id, i + 1, q.text, q.hint, q.answers);
-                });
-
-            $('#' + id + 'n').on('input', function(){
-                questions.changes[id] = true;
+        /**
+         * Hide the room progress bar
+         */
+        hideRoomProgress: function () {
+            $('#room-progress-container').hide();
+        },
+        /**
+         * Set the timer and animation
+         * @param {int} time - in ms
+         * @param {function} callback - to be called at the end
+         */
+        setTimer: function (time, callback) {
+            if (this.timer)
+                clearInterval(this.timer);
+            const container = $('#timer-progress-container');
+            container.stop(true);
+            container.show();
+            $('#timer-progress').css('width', '100%');
+            this.timeLeft = time;
+            this.timer = setInterval(function () {
+                ui.room.timeLeft -= 100;
+                if (ui.room.timeLeft < 0) {
+                    ui.room.killTimer();
+                    callback();
+                } else {
+                    $('#timer-progress').css('width', (100 * ui.room.timeLeft / time) + '%');
+                }
+            }, 100);
+            container.find('i').click(ui.room.killTimer);
+        },
+        /**
+         * Kill and hide the timer
+         */
+        killTimer: function () {
+            const container = $('#timer-progress-container');
+            clearInterval(ui.room.timer);
+            ui.room.timer = undefined;
+            $('#timer-progress').css('width', '0%');
+            container.fadeOut(400, function () {
+                container.hide();
+                $('#timer-progress').css('width', '100%');
             });
+        },
+        /**
+         * Set up links/videos on screen
+         * @param {string} mainlink
+         * @param {boolean} [autoplay]
+         */
+        showVideo: function (mainlink, autoplay) {
+            const sublinks = mainlink ? mainlink.split(';') : [''];
+            let html = '';
+            for (let i = 0; i < sublinks.length; i++) {
+                let link = sublinks[i].trim();
+                let subhtml = link;
+                const youtube = utils.getYoutubeEmbeddedLink(link, autoplay);
+                if (link.length === 0) {
+                    subhtml = '<h4>' + lang.getString('textNoVideo') + '</h4>';
+                } else if (youtube) {
+                    subhtml = '<iframe width="560" height="315" src="' + youtube + '" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
+                } else {
+                    let name = link.length > 40 ? (link.substr(0, 37) + '...') : link;
+                    const pos = link.indexOf(']');
+                    if (link.startsWith('[') && pos > -1) {
+                        name = link.substr(1, pos - 1);
+                        link = link.substr(pos + 1);
+                    }
+                    if (utils.matchUrl(link)) {
+                        subhtml = '<h4><a href="' + link + '" target="_blank">' + name + '</a></h4>';
+                    }
+                }
+                html += '<div id="video' + i + '" style="display:none">' + subhtml + '</div>';
+            }
+            $('#videos').html(html);
+            $('#video').show();
+            $('#video0').show();
 
-            $(card.find('.btn-delete')[0]).click(function () {
-                $(card.find('.btn-delete')[0]).addClass('disabled');
-                $(card.find('.btn-primary')[0]).addClass('disabled');
-                $(card.find('.btn-delete')[0]).find('svg').attr('class','fas fa-spinner fa-spin');
-                questions.delete(id, name);
-            });
+            const btnLast = $('#btn-last-video');
+            const btnNext = $('#btn-next-video');
 
-            $(card.find('.btn-primary')[0]).click(function () {
+            if (sublinks.length > 1) {
+                btnLast.hide();
+                btnNext.show();
 
-                var name = $('#' + id + 'n').val();
-                var qs = [];
-
-                var total = 0;
-
-                $('#' + id).find('.pack-question').each(function () {
-                    total++;
-
-                    var quid = $(this).attr("id");
-
-                    var question = {
-                        text: $('#' + quid + 't').val(),
-                        hint: $('#' + quid + 'h').val(),
-                        answers: []
-                    };
-
-                    for (var i = 1; i < 5; i++) {
-                        if ($('#' + quid + 'a' + i).val())
-                            question.answers.push($('#' + quid + 'a' + i).val());
-                        else
+                btnLast.click(function () {
+                    let i;
+                    let vid;
+                    for (i = 0; i < sublinks.length; i++) {
+                        vid = $('#video' + i);
+                        if (vid.is(':visible'))
                             break;
                     }
-
-                    console.log(question);
-
-                    if (question.text && question.answers.length === 4)
-                        qs.push(question);
+                    if (i - 1 >= 0) {
+                        vid.hide();
+                        btnNext.show();
+                        if (i - 2 === -1)
+                            btnLast.hide();
+                        $('#video' + (i - 1)).show();
+                    }
                 });
-
-                if (total !== qs.length)
-                    ui.addAlert('warning', 'Some questions are incomplete, fix it before saving');
-                else{
-                    $(card.find('.btn-delete')[0]).addClass('disabled');
-                    $(card.find('.btn-primary')[0]).addClass('disabled');
-                    $(card.find('.btn-primary')[0]).find('svg').attr('class','fas fa-spinner fa-spin');
-                    questions.update(id, name, qs);
-                }
-            });
-
-            card.find('.btn-add').click(function () {
-                questions.changes[id] = true;
-                var i = card.find('.fa-question-circle').length + 1;
-                ui.questions.addQuestion(id, i);
-            });
-
-            ui.registerCards();
-
-            if(open){
-                $(card.find('.card-link')[0]).click();
+                btnNext.click(function () {
+                    let i;
+                    let vid;
+                    for (i = 0; i < sublinks.length; i++) {
+                        vid = $('#video' + i);
+                        if (vid.is(':visible'))
+                            break;
+                    }
+                    if (i + 1 < sublinks.length) {
+                        vid.hide();
+                        btnLast.show();
+                        if (i + 2 === sublinks.length)
+                            btnNext.hide();
+                        $('#video' + (i + 1)).show();
+                    }
+                });
+            } else {
+                btnLast.hide();
+                btnNext.hide();
             }
-        },
-        releasePack: function(id){
-            var card = $('#' + id + 'c');
-            $(card.find('.btn-delete')[0]).removeClass('disabled');
-            $(card.find('.btn-delete')[0]).find('svg').attr('class','fas fa-plus');
-            $(card.find('.btn-primary')[0]).removeClass('disabled');
-            $(card.find('.btn-primary')[0]).find('svg').attr('class','fas fa-sync');
-        },
-        removePack: function (id) {
-            $('#' + id + 'c').remove();
-        },
-        addQuestion: function (packId, n, text, hint, answers) {
-            text = text ? text : '';
-            hint = hint ? hint : '';
-            answers = answers ? answers : ['', '', '', ''];
 
-            var html = '' +
-                '<div id="' + packId + 'q' + n + 'c" class="card text-left">' +
-                '<div class="card-header">' +
-                '<a class="card-link" data-toggle="collapse" href="#' + packId + 'q' + n + '"><i class="fas fa-chevron-circle-right"></i>&nbsp;Question ' + n + '</a>' +
-                '<span title="delete" class="btn-delete text-danger"><i class="fas fa-times"></i></span>' +
-                '</div>' +
-                '<div id="' + packId + 'q' + n + '" class="collapse pack-question" data-parent="#' + packId + '">' +
-                '<div class="card-body">' +
-                '<div class="form-group row">' +
-                '<label class="col-1 col-form-label"><i class="fas fa-question-circle" title="question"></i></label>' +
-                '<div class="col-11"><input type="text" class="form-control" id="' + packId + 'q' + n + 't" placeholder="Question text" value="' + text + '"></div>' +
-                '</div>' +
-                '<div class="form-group row">' +
-                '<label class="col-1 col-form-label"><i class="fas text-info fa-question" title="hint"></i></label>' +
-                '<div class="col-11"><input type="text" class="form-control" id="' + packId + 'q' + n + 'h" placeholder="Question hint" value="' + hint + '"></div>' +
-                '</div>' +
-                '<div class="form-group row">' +
-                '<label class="col-1 col-form-label"><i class="fas text-success fa-check" title="correct answer"></i></label>' +
-                '<div class="col-11"><input type="text" class="form-control" id="' + packId + 'q' + n + 'a1" placeholder="Answer 1 (correct)" value="' + answers[0] + '"></div>' +
-                '</div>' +
-                '<div class="form-group row">' +
-                '<label class="col-1 col-form-label"><i class="fas text-danger fa-times" title="wrong answer"></i></label>' +
-                '<div class="col-11"><input type="text" class="form-control" id="' + packId + 'q' + n + 'a2" placeholder="Answer 2" value="' + answers[1] + '"></div>' +
-                '</div>' +
-                '<div class="form-group row">' +
-                '<label class="col-1 col-form-label"><i class="fas text-danger fa-times" title="wrong answer"></i></label>' +
-                '<div class="col-11"><input type="text" class="form-control" id="' + packId + 'q' + n + 'a3" placeholder="Answer 3" value="' + answers[2] + '"></div>' +
-                '</div>' +
-                '<div class="form-group row">' +
-                '<label class="col-1 col-form-label"><i class="fas text-danger fa-times" title="wrong answer"></i></label>' +
-                '<div class="col-11"><input type="text" class="form-control" id="' + packId + 'q' + n + 'a4"  placeholder="Answer 4" value="' + answers[3] + '"></div>' +
-                '</div>' +
-                '<div class="card text-left">' +
-                '<div class="card-header">' +
-                '<a class="card-link" data-toggle="collapse" href="#' + packId + 'q' + n + 'p"><i class="fas fa-eye"></i>&nbsp;Preview</a>' +
-                '</div>' +
-                '<div id="' + packId + 'q' + n + 'p" class="collapse" data-parent="#' + packId + 'q' + n + '">' +
-                '<div class="card-body">' +
-                '<h3 class="text-center"></h3>' +
-                '<div class="row">' +
-                '<div class="col-6 answer"><div class="btn btn-danger btn-block btn-lg h-100"></div></div>' +
-                '<div class="col-6 answer"><div class="btn btn-success btn-block btn-lg h-100"></div></div>' +
-                '<div class="col-6 answer"><div class="btn btn-info btn-block btn-lg h-100"></div></div>' +
-                '<div class="col-6 answer"><div class="btn btn-warning btn-block btn-lg h-100"></div></div>' +
-                '</div>' +
-                '<div class="card text-left">' +
-                '<div class="card-header"><a class="card-link" data-toggle="collapse"><i class="fas fa-chevron-circle-down"></i>&nbsp;Hint</a></div>' +
-                '<div class="collapse show"><div class="card-body"></div></div>' +
-                '</div>' +
-                '</div></div>' +
-                '</div></div></div>';
-            $('#' + packId).find('.pack-questions').append(html);
+        },
+        /**
+         * Delete all links and videos on screen
+         */
+        hideVideo: function () {
+            $('#videos').html('');
+            $('#video').hide();
+        },
+        /**
+         * Show statistics chart
+         * @param {{total:int,right:int,wrong:int,unanswered:int,score:int}[]} stats
+         */
+        showStats: function (stats) {
+            let scoreData = [[0, 0]];
+            let errorData = [[0, 0]];
 
-            $($('#' + packId + 'q' + n + 'c').find('.btn-delete')[0]).click(function () {
-                questions.changes[packId] = true;
-                ui.questions.removeQuestion(packId, n);
+            stats.forEach(function (e, i) {
+                scoreData.push([i + 1, e.score / room.setSize]);
+                errorData.push([i + 1, (e.wrong + e.unanswered) / (e.total + e.unanswered)]);
             });
 
-            var preview = $('#' + packId + 'q' + n + 'p');
-            var previewLink = $($('#' + packId + 'q' + n).find('.card-link')[0]);
-
-            var changeEvent = function () {
-                questions.changes[packId] = true;
-                if (preview.hasClass("show")) {
-                    previewLink.click();
+            $('#stats-div').show();
+            $.plot($('#chart'), [scoreData, errorData], globals.flotOptions);
+        },
+        /**
+         * Hide statistics chart
+         */
+        hideStats() {
+            $('#stats-div').hide();
+        },
+        /**
+         * Show a message above room buttons
+         * @param {string} message
+         */
+        showMessage(message) {
+            Object.keys(mapping.nameToEffect).forEach(function (effect) {
+                if (message.includes('<' + effect + '>')) {
+                    particles.show(globals.particlesTime, mapping.nameToEffect[effect]);
+                    message = message.replaceAll('<' + effect + '>', '');
                 }
+            });
+            $('#room-message').html(message).show();
+        },
+        /**
+         * Hide room message
+         */
+        hideMessage() {
+            $('#room-message').hide();
+        },
+        /**
+         * Change opacity of room UI
+         * @param {float} o
+         */
+        changeOpacity: function (o) {
+            const rgb = (36 * o + 200).toFixed(0);
+            const val = 'rgba(' + rgb + ', ' + rgb + ', ' + rgb + ', ' + o + ')';
+            $('.jumbotron').css('backgroundColor', val);
+        }
+    },
+    pad: {
+        /**
+         * Init pad view
+         * @param {string} name - room name
+         */
+        init: function (name) {
+            //pad view
+            ['A', 'B', 'C', 'D'].forEach(function (letter) {
+                const clickStart = function () {
+                    $(this).find('div')
+                        .removeClass('bg-' + mapping.letterToColor(letter))
+                        .addClass('bg-dark')
+                        .addClass('text-white');
+                };
+                const clickStop = function () {
+                    $(this).find('div')
+                        .addClass('bg-' + mapping.letterToColor(letter))
+                        .removeClass('bg-dark')
+                        .removeClass('text-white');
+                };
+
+                $('#btn-' + letter).click(function () {
+                    padRoom.answerQuestion(mapping.letterToAnswer[letter]);
+                }).mousedown(clickStart)
+                    .mouseup(clickStop)
+                    .on('touchstart', clickStart)
+                    .on('touchend', clickStop);
+            });
+
+            const laclickStart = function () {
+                const la = padRoom.lastAnswer;
+                if (la)
+                    $('#btn-' + mapping.answerToLetter[la]).find('div')
+                        .removeClass('bg-' + mapping.answerToColor[la])
+                        .addClass('bg-dark')
+                        .addClass('text-white');
             };
 
-            $('#' + packId + 'q' + n + 't').on('input', changeEvent);
-            $('#' + packId + 'q' + n + 'h').on('input', changeEvent);
-            $('#' + packId + 'q' + n + 'a1').on('input', changeEvent);
-            $('#' + packId + 'q' + n + 'a2').on('input', changeEvent);
-            $('#' + packId + 'q' + n + 'a3').on('input', changeEvent);
-            $('#' + packId + 'q' + n + 'a4').on('input', changeEvent);
+            const laClickStop = function () {
+                const la = padRoom.lastAnswer;
+                if (la)
+                    $('#btn-' + mapping.answerToLetter[la]).find('div')
+                        .addClass('bg-' + mapping.answerToColor[la])
+                        .removeClass('bg-dark')
+                        .removeClass('text-white');
+            };
 
-            previewLink.click(function () {
-                if (!preview.hasClass("show")) {
-                    var text = $('#' + packId + 'q' + n + 't').val();
-                    var hint = $('#' + packId + 'q' + n + 'h').val();
-                    var answers = [
-                        $('#' + packId + 'q' + n + 'a1').val(),
-                        $('#' + packId + 'q' + n + 'a2').val(),
-                        $('#' + packId + 'q' + n + 'a3').val(),
-                        $('#' + packId + 'q' + n + 'a4').val()
-                    ];
+            $('#btn-last-answer').mousedown(laclickStart)
+                .mouseup(laClickStop)
+                .on('touchstart', laclickStart)
+                .on('touchend', laClickStop);
 
-                    preview.find('h3').html(text);
-                    preview.find('.btn-danger').html('A : ' + answers[0]);
-                    preview.find('.btn-success').html('B : ' + answers[1]);
-                    preview.find('.btn-info').html('C : ' + answers[2]);
-                    preview.find('.btn-warning').html('D : ' + answers[3]);
-                    $(preview.find('.card-body')[1]).html(hint);
-                    window.updateMath();
-                    setTimeout(function(){
-                        var height = 0;
-                        preview.find('.answer').each(function(){
-                            if($(this).height()>height){
-                                height = $(this).height();
-                            }
-                        });
-                        if(height){
-                            preview.find('.answer').each(function(){
-                                $(this).height(height);
-                            });
-                        }
-                    });
-                }
-            });
+            $('#btn-quit').click(padRoom.quit);
 
-            ui.registerCards();
-        },
-        removeQuestion: function (packId, n) {
-            $('#' + packId + 'q' + n + 'c').remove();
+            $('#pad-room-name').html('<u>' + name + '</u>');
         }
     }
 };

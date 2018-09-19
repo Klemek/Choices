@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<web-app xmlns="http://java.sun.com/xml/ns/javaee" version="3.1">
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://java.sun.com/xml/ns/javaee"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd"
+         version="3.1">
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>
@@ -8,28 +11,15 @@
         <param-value>${auth.callback}</param-value>
     </context-param>
     <context-param>
-        <param-name>auth.clientID</param-name>
-        <param-value>${auth.clientID}</param-value>
+        <param-name>app.path</param-name>
+        <param-value>${app.path}</param-value>
     </context-param>
     <context-param>
-        <param-name>auth.clientSecret</param-name>
-        <param-value>${auth.clientSecret}</param-value>
+        <param-name>app.storeLang</param-name>
+        <param-value>${app.storeLang}</param-value>
     </context-param>
-
-    <servlet>
-        <servlet-name>default</servlet-name>
-        <servlet-class>org.eclipse.jetty.servlet.DefaultServlet</servlet-class>
-        <init-param>
-            <param-name>cacheControl</param-name>
-            <param-value>max-age=0,public</param-value>
-        </init-param>
-        <init-param>
-            <param-name>maxCachedFiles</param-name>
-            <param-value>0</param-value>
-        </init-param>
-        <init-param>
-            <param-name>useFileMappedBuffer</param-name>
-            <param-value>false</param-value>
-        </init-param>
-    </servlet>
+    <context-param>
+        <param-name>app.logLevel</param-name>
+        <param-value>${app.logLevel}</param-value>
+    </context-param>
 </web-app>

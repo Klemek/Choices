@@ -1,28 +1,29 @@
 package uk.ac.port.choices.utils;
 
-import org.json.JSONObject;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.modules.junit4.PowerMockRunner;
-import uk.ac.port.choices.TestUtils;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.StringWriter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-@RunWith(PowerMockRunner.class)
-@PowerMockIgnore({"java.*", "javax.*", "org.*"})
+import org.json.JSONObject;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import uk.ac.port.choices.TestUtils;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 public class ServletUtilsTest {
     @Test
     public void testMatchingURI() {
-        assertTrue(ServletUtils.matchingURI("/api/test/{}/test", "/api2/test/bla/test", 2));
-        assertFalse(ServletUtils.matchingURI("/api", "/api2", 1));
-        assertFalse(ServletUtils.matchingURI("/api/group/{}", "/api/group", 2));
+        assertTrue(ServletUtils.matchingUri("/api/test/{}/test", "/api2/test/bla/test", 2, 0));
+        assertTrue(ServletUtils.matchingUri("/api/test/{}/test", "/test/test/test/api2/test/bla/test", 2, 3));
+        assertFalse(ServletUtils.matchingUri("/api", "/api2", 1, 0));
+        assertFalse(ServletUtils.matchingUri("/api/group/{}", "/api/group", 2, 0));
     }
 
     @Test
@@ -86,7 +87,7 @@ public class ServletUtilsTest {
 
         ServletUtils.mapRequest(request, response, map);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(HttpServletResponse.SC_BAD_REQUEST, res.getInt("code"));
     }
 
@@ -106,7 +107,7 @@ public class ServletUtilsTest {
 
         ServletUtils.mapRequest(request, response, map);
 
-        JSONObject res = TestUtils.getResponseAsJSON(writer);
+        JSONObject res = TestUtils.getResponseAsJson(writer);
         assertEquals(HttpServletResponse.SC_NOT_FOUND, res.getInt("code"));
     }
 
@@ -126,5 +127,10 @@ public class ServletUtilsTest {
         HttpServletResponse response = TestUtils.createMockResponse(writer);
 
         assertFalse(ServletUtils.handleCrossOrigin(request, response));
+    }
+
+    @BeforeClass
+    public static void setUpClass() {
+        assertTrue(TestUtils.prepareTestClass());
     }
 }

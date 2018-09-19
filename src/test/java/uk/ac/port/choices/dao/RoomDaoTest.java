@@ -1,32 +1,23 @@
 package uk.ac.port.choices.dao;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import uk.ac.port.choices.TestUtils;
-import uk.ac.port.choices.model.Question;
 import uk.ac.port.choices.model.Room;
 import uk.ac.port.choices.model.User;
 import uk.ac.port.choices.utils.Utils;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class RoomDaoTest {
     private static Room room;
-
-    @BeforeClass
-    public static void setUpClass() {
-        assertTrue(TestUtils.setUpLocalDatastore());
-
-        List<Question> questionList = new ArrayList<>();
-        questionList.add(new Question("What is 1+1", "hint", new String[]{"1", "2", "3", "4"}));
-        List<User> users = new ArrayList<>();
-        users.add(new User("id", "name", "imageUrl", 4));
-        RoomDaoTest.room = new Room(1L, Utils.getRandomString(6), questionList, 5, "abcde", Room.State.ANSWERING, users, true);
-    }
-
 
     @Test
     public void createRoom() {
@@ -81,5 +72,36 @@ public class RoomDaoTest {
 
         Room room3 = RoomDao.getRoomBySimpleId(RoomDaoTest.room.getSimpleId());
         assertNull(room3);
+    }
+
+    @Test
+    public void deleteAllRoom() {
+        assertNotNull(RoomDao.createRoom(RoomDaoTest.room));
+
+        Room room2 = RoomDao.getRoomBySimpleId(RoomDaoTest.room.getSimpleId());
+        assertEquals(RoomDaoTest.room, room2);
+
+        RoomDao.deleteAllRooms();
+
+        Room room3 = RoomDao.getRoomBySimpleId(RoomDaoTest.room.getSimpleId());
+        assertNull(room3);
+    }
+
+    @Test
+    public void listRoomSimpleIds() {
+        assertNotNull(RoomDao.createRoom(RoomDaoTest.room));
+
+        List<String> list = RoomDao.listRoomSimpleIds();
+        assertEquals(1, list.size());
+        assertEquals(RoomDaoTest.room.getSimpleId(), list.get(0));
+
+        RoomDao.deleteRoom(RoomDaoTest.room);
+    }
+
+    @BeforeClass
+    public static void setUpClass() {
+        assertTrue(TestUtils.prepareTestClass(true));
+
+        RoomDaoTest.room = new Room(1L, Utils.getRandomString(6), "abcde", Arrays.asList(TestUtils.user), true, false);
     }
 }

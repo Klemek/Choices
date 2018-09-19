@@ -1,21 +1,26 @@
 package uk.ac.port.choices.api;
 
 import fr.klemek.betterlists.BetterArrayList;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import uk.ac.port.choices.dao.QuestionPackDao;
-import uk.ac.port.choices.model.Question;
-import uk.ac.port.choices.model.QuestionPack;
-import uk.ac.port.choices.utils.Logger;
-import uk.ac.port.choices.utils.ServletUtils;
-import uk.ac.port.choices.utils.Utils;
+import fr.klemek.logger.Logger;
+
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import uk.ac.port.choices.dao.QuestionPackDao;
+import uk.ac.port.choices.model.Question;
+import uk.ac.port.choices.model.QuestionPack;
+import uk.ac.port.choices.utils.ServletUtils;
+import uk.ac.port.choices.utils.Utils;
 
 @WebServlet("/api/questions/*")
 public class QuestionsServlet extends HttpServlet {
@@ -43,26 +48,49 @@ public class QuestionsServlet extends HttpServlet {
         }
     }
 
+    /**
+     * GET /api/questions/list .
+     *
+     * @param response the HttpServletResponse
+     */
     private static void listPacks(HttpServletResponse response) {
         List<QuestionPack> packs = QuestionPackDao.listQuestionPacks();
-        JSONArray array = new JSONArray(BetterArrayList.fromList(packs).select(QuestionsServlet::getPackInfo));
-        ServletUtils.sendJSONResponse(response, array);
+        JSONArray array = new JSONArray(BetterArrayList.fromList(packs)
+                .where(QuestionPack::isEnabled)
+                .select(qp -> qp.toJson(false)));
+        ServletUtils.sendJsonResponse(response, array);
     }
 
+    /**
+     * GET /api/questions/all .
+     *
+     * @param admin    if the user is admin
+     * @param response the HttpServletResponse
+     */
     private static void listPacksFull(boolean admin, HttpServletResponse response) {
         if (QuestionsServlet.isForbidden(response, admin))
             return;
         List<QuestionPack> packs = QuestionPackDao.listQuestionPacks();
-        JSONArray array = new JSONArray(BetterArrayList.fromList(packs).select(QuestionPack::toJSON));
-        ServletUtils.sendJSONResponse(response, array);
+        JSONArray array = new JSONArray(BetterArrayList.fromList(packs).select(QuestionPack::toJson));
+        ServletUtils.sendJsonResponse(response, array);
     }
 
+    /**
+     * PUT /api/questions/create .
+     *
+     * @param admin    if the user is admin
+     * @param request  the HttpServletRequest
+     * @param response the HttpServletResponse
+     */
     private static void createPack(boolean admin, HttpServletRequest request, HttpServletResponse response) {
         if (QuestionsServlet.isForbidden(response, admin))
             return;
 
         Map<String, String> params = ServletUtils.readParameters(request); //because of PUT request
         String name = params.get(QuestionPack.KEY_NAME);
+        String message = request.getParameter(QuestionPack.KEY_MESSAGE);
+        String video = request.getParameter(QuestionPack.KEY_VIDEO);
+        boolean enabled = Boolean.parseBoolean(request.getParameter(QuestionPack.KEY_ENABLED));
         List<Question> questions = QuestionsServlet.getQuestionList(params.get(QuestionPack.KEY_QUESTIONS));
         if (name == null
                 || name.trim().isEmpty()
@@ -71,24 +99,38 @@ public class QuestionsServlet extends HttpServlet {
             return;
         }
 
-        QuestionPack pack = new QuestionPack(name, questions);
+        QuestionPack pack = new QuestionPack(name, video, message, enabled, questions);
         QuestionPackDao.createQuestionPack(pack);
         if (pack.getId() != null) {
-            ServletUtils.sendJSONResponse(response, pack.toJSON());
+            ServletUtils.sendJsonResponse(response, pack.toJson());
         } else {
             ServletUtils.sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
+    /**
+     * GET /api/questions/{} .
+     *
+     * @param admin    if the user is admin
+     * @param request  the HttpServletRequest
+     * @param response the HttpServletResponse
+     */
     private static void getPackDetails(boolean admin, HttpServletRequest request, HttpServletResponse response) {
         if (QuestionsServlet.isForbidden(response, admin))
             return;
         QuestionPack pack = ServletUtils.getQuestionPackFromRequest(request, response);
         if (pack == null)
             return;
-        ServletUtils.sendJSONResponse(response, pack.toJSON());
+        ServletUtils.sendJsonResponse(response, pack.toJson());
     }
 
+    /**
+     * POST /api/questions/{} .
+     *
+     * @param admin    if the user is admin
+     * @param request  the HttpServletRequest
+     * @param response the HttpServletResponse
+     */
     private static void updatePack(boolean admin, HttpServletRequest request, HttpServletResponse response) {
         if (QuestionsServlet.isForbidden(response, admin))
             return;
@@ -97,6 +139,9 @@ public class QuestionsServlet extends HttpServlet {
             return;
 
         String name = request.getParameter(QuestionPack.KEY_NAME);
+        String message = request.getParameter(QuestionPack.KEY_MESSAGE);
+        String video = request.getParameter(QuestionPack.KEY_VIDEO);
+        boolean enabled = Boolean.parseBoolean(request.getParameter(QuestionPack.KEY_ENABLED));
         List<Question> questions = QuestionsServlet.getQuestionList(request.getParameter(QuestionPack.KEY_QUESTIONS));
         if (name == null
                 || name.trim().isEmpty()
@@ -105,11 +150,18 @@ public class QuestionsServlet extends HttpServlet {
             return;
         }
 
-        pack = new QuestionPack(pack.getId(), name, questions);
+        pack = new QuestionPack(pack.getId(), name, video, message, enabled, questions);
         QuestionPackDao.updateQuestionPack(pack);
-        ServletUtils.sendJSONResponse(response, pack.toJSON());
+        ServletUtils.sendJsonResponse(response, pack.toJson());
     }
 
+    /**
+     * DELETE /api/questions/{} .
+     *
+     * @param admin    if the user is admin
+     * @param request  the HttpServletRequest
+     * @param response the HttpServletResponse
+     */
     private static void deletePack(boolean admin, HttpServletRequest request, HttpServletResponse response) {
         if (QuestionsServlet.isForbidden(response, admin))
             return;
@@ -117,9 +169,8 @@ public class QuestionsServlet extends HttpServlet {
         if (pack == null)
             return;
         QuestionPackDao.deleteQuestionPack(pack);
-        ServletUtils.sendOK(response);
+        ServletUtils.sendOk(response);
     }
-
 
     private static boolean isForbidden(HttpServletResponse response, boolean admin) {
         if (!admin) {
@@ -127,13 +178,6 @@ public class QuestionsServlet extends HttpServlet {
             return true;
         }
         return false;
-    }
-
-    private static JSONObject getPackInfo(QuestionPack pack) {
-        JSONObject json = new JSONObject();
-        json.put("id", pack.getId());
-        json.put("name", pack.getName());
-        return json;
     }
 
     private static List<Question> getQuestionList(String strJsonList) {
@@ -144,8 +188,8 @@ public class QuestionsServlet extends HttpServlet {
             return Collections.emptyList();
         }
         return BetterArrayList
-                .fromList(Utils.jArrayToJObjectList(questionArray))
-                .select(json -> Question.fromJSON(json.toString()))
+                .fromList(Utils.jarrayToList(questionArray))
+                .select(json -> Question.fromJson(json.toString()))
                 .where(Objects::nonNull);
     }
 }

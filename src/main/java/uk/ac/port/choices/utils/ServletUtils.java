@@ -1,15 +1,7 @@
 package uk.ac.port.choices.utils;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-import uk.ac.port.choices.dao.QuestionPackDao;
-import uk.ac.port.choices.dao.RoomDao;
-import uk.ac.port.choices.model.QuestionPack;
-import uk.ac.port.choices.model.Room;
-import uk.ac.port.choices.oauth2.Oauth2CallbackServlet;
+import fr.klemek.logger.Logger;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -19,16 +11,28 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import uk.ac.port.choices.ContextListener;
+import uk.ac.port.choices.dao.QuestionPackDao;
+import uk.ac.port.choices.dao.RoomDao;
+import uk.ac.port.choices.model.QuestionPack;
+import uk.ac.port.choices.model.Room;
+import uk.ac.port.choices.oauth2.Oauth2CallbackServlet;
+
 /**
  * Utility class that store useful servlet functions.
- *
- * @author Clement Gouin
  */
 public final class ServletUtils {
 
     private static final String VALUE_KEY = "value";
 
     private static final Map<Long, String> currentRequests = new HashMap<>();
+
+    private static int uriOffset = -1;
 
     private ServletUtils() {
     }
@@ -76,7 +80,7 @@ public final class ServletUtils {
             writer.print(result);
             response.flushBuffer();
         } catch (IOException e) {
-            Logger.log(Level.SEVERE, e.toString(), e);
+            Logger.log(e);
         }
     }
 
@@ -106,10 +110,22 @@ public final class ServletUtils {
             source = Utils.getCallingClassName(stackTraceLevel++);
         } while (className.equals(source));
         if (code != HttpServletResponse.SC_UNAUTHORIZED)
-            Logger.log(source, Level.WARNING, "Error {0} sent : {1} (request : {2})", code, message == null ? "" : ": " + message, ServletUtils.getCurrentRequest());
+            Logger.log(Level.WARNING, "[{0}] Error {1} sent : {2} (request : {3})",
+                    source, code, message == null ? "" : ": " + message, ServletUtils.getCurrentRequest());
         JSONObject error = new JSONObject();
         error.put("error", message == null ? ServletUtils.getError(code) : message);
         ServletUtils.sendContent(response, code, error);
+    }
+
+    /**
+     * Send a ok response.
+     *
+     * @param response the response
+     */
+    public static void sendOk(HttpServletResponse response) {
+        JSONObject json = new JSONObject();
+        json.put("success", true);
+        ServletUtils.sendJsonResponse(response, json);
     }
 
     /**
@@ -118,14 +134,8 @@ public final class ServletUtils {
      * @param response the servlet response
      * @param result   the json object to send
      */
-    public static void sendJSONResponse(HttpServletResponse response, JSONObject result) {
+    public static void sendJsonResponse(HttpServletResponse response, JSONObject result) {
         ServletUtils.sendContent(response, HttpServletResponse.SC_OK, result);
-    }
-
-    public static void sendOK(HttpServletResponse response) {
-        JSONObject json = new JSONObject();
-        json.put("success", true);
-        ServletUtils.sendJSONResponse(response, json);
     }
 
     /**
@@ -135,7 +145,7 @@ public final class ServletUtils {
      * @param response  the servlet response
      * @param jsonArray the array to send
      */
-    public static void sendJSONResponse(HttpServletResponse response, JSONArray jsonArray) {
+    public static void sendJsonResponse(HttpServletResponse response, JSONArray jsonArray) {
         JSONObject result = new JSONObject();
         result.put(ServletUtils.VALUE_KEY, jsonArray);
         ServletUtils.sendContent(response, HttpServletResponse.SC_OK, result);
@@ -146,64 +156,79 @@ public final class ServletUtils {
      *
      * @param request  the servlet request
      * @param response the servlet response
-     * @return true if this is a cross origin request and the response should be
-     * sent as is
+     * @return true if this is a cross origin request and the response should be sent as is
      */
-    public static boolean handleCrossOrigin(HttpServletRequest request, HttpServletResponse response) {
+    public static boolean handleCrossOrigin(HttpServletRequest request,
+                                            HttpServletResponse response) {
         response.setHeader("Access-Control-Allow-Origin", "*");
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         if ("OPTIONS".equals(request.getMethod())) {
-            ServletUtils.sendOK(response);
+            ServletUtils.sendOk(response);
             return true;
         } else {
             return false;
         }
     }
 
-	/**
-	 * Map a request to the given functions and handle wrong method and invalid url.
+    /**
+     * Map a request to the given functions and handle wrong method and invalid url.
      *
-     * @param request
-     *            the servlet request
-     * @param response
-     *            the servlet response
-     * @param map
-     *            the mapping as "METHOD /api/path" - Method to call
+     * @param request  the servlet request
+     * @param response the servlet response
+     * @param map      the mapping as "METHOD /api/path" - Method to call
      */
-    public static void mapRequest(HttpServletRequest request, HttpServletResponse response, Map<String, Runnable> map) {
+    public static void mapRequest(HttpServletRequest request, HttpServletResponse response,
+                                  Map<String, Runnable> map) {
         if (ServletUtils.handleCrossOrigin(request, response))
             return;
-        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); //must be rewritten by mapped function
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        //must be rewritten by mapped function
         boolean matchingWrongMethod = false;
         boolean matchingDone = false;
 
-        ServletUtils.currentRequests.put(Thread.currentThread().getId(), ServletUtils.requestToJSON(request).toString());
-		for (Map.Entry<String, Runnable> entry : map.entrySet()) {
-			String[] mapping = entry.getKey().split(" ");
+        if (ServletUtils.uriOffset < 0) {
+            String path = ContextListener.getAppPath();
+            ServletUtils.uriOffset = (path.length() == 0 || path.equals("/")) ? 0 : path.split("/").length - 1;
+        }
+
+        ServletUtils.currentRequests.put(Thread.currentThread().getId(),
+                ServletUtils.requestToJson(request).toString());
+        for (Map.Entry<String, Runnable> entry : map.entrySet()) {
+            String[] mapping = entry.getKey().split(" ");
             if (mapping.length != 2)
-                throw new IllegalArgumentException(String.format("Wrongly mapped URI : '%s'", entry.getKey()));
-            if (ServletUtils.matchingURI(mapping[1], request.getRequestURI(), 2)) {
+                throw new IllegalArgumentException(String.format("Wrongly mapped URI : '%s'",
+                        entry.getKey()));
+            if (ServletUtils.matchingUri(mapping[1], request.getRequestURI(), 2, ServletUtils.uriOffset)) {
                 if (request.getMethod().equalsIgnoreCase(mapping[0])) {
                     entry.getValue().run();
                     matchingDone = true;
                     break;
                 } else {
-					matchingWrongMethod = true;
-				}
-			}
-		}
+                    matchingWrongMethod = true;
+                }
+            }
+        }
         if (!matchingDone) {
             if (matchingWrongMethod) {
-                ServletUtils.sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid method");
+                ServletUtils.sendError(response, HttpServletResponse.SC_BAD_REQUEST,
+                        "Invalid method");
             } else {
-                ServletUtils.sendError(response, HttpServletResponse.SC_NOT_FOUND, "Invalid api url");
+                ServletUtils.sendError(response, HttpServletResponse.SC_NOT_FOUND,
+                        "Invalid api url");
             }
         }
     }
 
+    /**
+     * Read paramaters from a PUT request url encoded.
+     *
+     * @param request the request
+     * @return all parameters in a Map
+     */
     public static Map<String, String> readParameters(HttpServletRequest request) {
         Map<String, String> out = new HashMap<>();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()))) {
+        try (BufferedReader br
+                     = new BufferedReader(new InputStreamReader(request.getInputStream()))) {
             String data = br.readLine();
             if (data != null && !data.isEmpty())
                 for (String parameter : data.split("&")) {
@@ -212,18 +237,21 @@ public final class ServletUtils {
                         out.put(spl[0].trim(), URLDecoder.decode(spl[1].trim(), "UTF-8"));
                 }
         } catch (IOException e) {
-            Logger.log(Level.WARNING, "Cannot open input stream on {0} request", request.getMethod());
+            Logger.log(Level.WARNING, "Cannot open input stream on {0} request",
+                    request.getMethod());
         }
         for (Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet())
             if (!out.containsKey(parameter.getKey()))
-                out.put(parameter.getKey(), parameter.getValue().length > 0 ? parameter.getValue()[0] : "");
+                out.put(parameter.getKey(), parameter.getValue().length > 0
+                        ? parameter.getValue()[0] : "");
 
-        ServletUtils.currentRequests.put(Thread.currentThread().getId(), ServletUtils.requestToJSON(request, out).toString());
+        ServletUtils.currentRequests.put(Thread.currentThread().getId(),
+                ServletUtils.requestToJson(request, out).toString());
 
         return out;
     }
 
-    private static JSONObject requestToJSON(HttpServletRequest request) {
+    private static JSONObject requestToJson(HttpServletRequest request) {
         JSONObject params = new JSONObject();
         for (Map.Entry<String, String[]> param : request.getParameterMap().entrySet())
             if (param.getValue().length > 0)
@@ -237,7 +265,7 @@ public final class ServletUtils {
         return json;
     }
 
-    private static JSONObject requestToJSON(HttpServletRequest request, Map<String, String> params) {
+    private static JSONObject requestToJson(HttpServletRequest request, Map<String, String> params) {
         JSONObject json = new JSONObject();
         json.put("requested", request.getRequestURI());
         json.put("method", request.getMethod());
@@ -250,40 +278,60 @@ public final class ServletUtils {
         return ServletUtils.currentRequests.get(Thread.currentThread().getId());
     }
 
-	/**
-	 * Compare given URI to reference and check if it match.
-	 *
-     * @param ref
-     *            reference URI, can contains '{anything}' as wildcard
-     * @param src
-     *            URI to check
-     * @param ignoreLevel
-     *            where to start the comparison
+    /**
+     * Compare given URI to reference and check if it match.
+     *
+     * @param ref         reference URI, can contains '{anything}' as wildcard
+     * @param src         URI to check
+     * @param ignoreLevel where to start the comparison
+     * @param offset      where start comparison of src
      * @return true if its a match
      */
-    public static boolean matchingURI(String ref, String src, int ignoreLevel) {
+    public static boolean matchingUri(String ref, String src, int ignoreLevel, int offset) {
         String[] refPath = ref.split("/");
         String[] srcPath = src.split("/");
-        if (refPath.length != srcPath.length)
+        if (refPath.length != srcPath.length - offset)
             return false;
         for (int i = ignoreLevel; i < refPath.length; i++)
-            if (!refPath[i].startsWith("{") && !srcPath[i].equals(refPath[i]))
+            if (!refPath[i].startsWith("{") && !srcPath[i + offset].equals(refPath[i]))
                 return false;
         return true;
     }
 
+    /**
+     * Get an user from his id in the session.
+     *
+     * @param request  the request
+     * @param response the response
+     * @return the found user or null on error
+     */
     public static String getUser(HttpServletRequest request, HttpServletResponse response) {
-        String userId = (String) request.getSession().getAttribute(Oauth2CallbackServlet.SESSION_USER_ID);
+        String userId = (String) request.getSession()
+                .getAttribute(Oauth2CallbackServlet.SESSION_USER_ID);
         if (userId == null)
             ServletUtils.sendError(response, HttpServletResponse.SC_UNAUTHORIZED);
         return userId;
     }
 
+    /**
+     * Check if a user is admin by his mail in the session.
+     *
+     * @param request the request
+     * @return true if the user is admin
+     */
     public static boolean isUserAdmin(HttpServletRequest request) {
-        String userEmail = (String) request.getSession().getAttribute(Oauth2CallbackServlet.SESSION_USER_EMAIL);
+        String userEmail = (String) request.getSession()
+                .getAttribute(Oauth2CallbackServlet.SESSION_USER_EMAIL);
         return userEmail != null && Utils.isAdmin(userEmail);
     }
 
+    /**
+     * Get a room from its id in the request path.
+     *
+     * @param request  the request
+     * @param response the response
+     * @return the found room or null on error
+     */
     public static Room getRoomFromRequest(HttpServletRequest request, HttpServletResponse response) {
         String[] path = request.getRequestURI().split("/");
         String simpleId = path[3];
@@ -293,9 +341,17 @@ public final class ServletUtils {
         return room;
     }
 
-    public static QuestionPack getQuestionPackFromRequest(HttpServletRequest request, HttpServletResponse response) {
+    /**
+     * Get a question pack from its id in the request path.
+     *
+     * @param request  the request
+     * @param response the response
+     * @return the found question pack or null on error
+     */
+    public static QuestionPack getQuestionPackFromRequest(HttpServletRequest request,
+                                                          HttpServletResponse response) {
         String[] path = request.getRequestURI().split("/");
-        Long id = Utils.stringToLong(path[3]);
+        Long id = Utils.tryParseLong(path[3]);
         QuestionPack pack = id == null ? null : QuestionPackDao.getQuestionPackById(id);
         if (pack == null)
             ServletUtils.sendError(response, HttpServletResponse.SC_NOT_FOUND);

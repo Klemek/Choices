@@ -1,13 +1,23 @@
 package uk.ac.port.choices.dao;
 
-import com.google.cloud.datastore.*;
+import com.google.cloud.datastore.BaseEntity;
+import com.google.cloud.datastore.Datastore;
+import com.google.cloud.datastore.DatastoreOptions;
+import com.google.cloud.datastore.Entity;
+import com.google.cloud.datastore.QueryResults;
+import com.google.cloud.datastore.StringValue;
+
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import uk.ac.port.choices.model.Question;
 import uk.ac.port.choices.model.QuestionPack;
 import uk.ac.port.choices.model.Room;
 import uk.ac.port.choices.model.User;
-
-import java.util.ArrayList;
-import java.util.List;
+import uk.ac.port.choices.utils.Lang;
 
 final class DaoUtils {
 
@@ -18,14 +28,14 @@ final class DaoUtils {
 
     static Datastore getDatastore() {
         if (DaoUtils.datastore == null)
-            DaoUtils.datastore = DatastoreOptions.getDefaultInstance().getService();  // Authorized Datastore service
+            DaoUtils.datastore = DatastoreOptions.getDefaultInstance().getService();
         return DaoUtils.datastore;
     }
 
     //region Functions
 
     static StringValue getStringValue(Object o) {
-        return StringValue.newBuilder(o.toString()).setExcludeFromIndexes(true).build();
+        return StringValue.newBuilder(o == null ? null : o.toString()).setExcludeFromIndexes(true).build();
     }
 
     //region Room
@@ -34,24 +44,45 @@ final class DaoUtils {
         return new Room(
                 entity.getKey().getId(),
                 entity.getString(Room.KEY_SIMPLEID),
-                DaoUtils.jsonListToQuestionList(entity.getList(Room.KEY_QUESTIONS)),
-                (int) entity.getLong(Room.KEY_ROUND),
                 entity.getString(Room.KEY_MASTERID),
-                Room.parseState(entity.getString(Room.KEY_STATE)),
                 DaoUtils.jsonListToUserList(entity.getList(Room.KEY_USERS)),
-                entity.getBoolean(Room.KEY_LOCK)
+                entity.getBoolean(Room.KEY_LOCK),
+                entity.getBoolean(Room.KEY_LOCK_ANSWERS)
         );
     }
 
     @SuppressWarnings("unchecked")
     static BaseEntity.Builder roomToEntityBuilder(Room room, BaseEntity.Builder builder) {
         return builder.set(Room.KEY_USERS, DaoUtils.userListToJsonList(room.getUsers()))
-                .set(Room.KEY_QUESTIONS, DaoUtils.questionListTojsonList(room.getQuestions()))
                 .set(Room.KEY_MASTERID, room.getMasterId())
-                .set(Room.KEY_STATE, room.getState().toString())
-                .set(Room.KEY_ROUND, room.getRound())
                 .set(Room.KEY_SIMPLEID, room.getSimpleId())
-                .set(Room.KEY_LOCK, room.isLocked());
+                .set(Room.KEY_LOCK, room.isLocked())
+                .set(Room.KEY_LOCK_ANSWERS, room.areAnswersLocked());
+    }
+
+    //endregion
+
+    //region Lang
+    static Map.Entry<String, String> entityToLang(Entity entity) {
+        return new AbstractMap.SimpleEntry<>(
+                entity.getString(Lang.KEY_KEY),
+                entity.getString(Lang.KEY_VALUE)
+        );
+    }
+
+    @SuppressWarnings("unchecked")
+    static BaseEntity.Builder langToEntityBuilder(String key, String value, BaseEntity.Builder builder) {
+        return builder.set(Lang.KEY_KEY, key)
+                .set(Lang.KEY_VALUE, DaoUtils.getStringValue(value));
+    }
+
+    static Map<String, String> entityListToLang(QueryResults<Entity> resultList) {
+        Map<String, String> output = new HashMap<>();
+        while (resultList.hasNext()) {
+            Map.Entry<String, String> entry = DaoUtils.entityToLang(resultList.next());
+            output.put(entry.getKey(), entry.getValue());
+        }
+        return output;
     }
 
     //endregion
@@ -62,14 +93,23 @@ final class DaoUtils {
         return new QuestionPack(
                 entity.getKey().getId(),
                 entity.getString(QuestionPack.KEY_NAME),
+                entity.getString(QuestionPack.KEY_VIDEO),
+                entity.getString(QuestionPack.KEY_MESSAGE),
+                entity.contains(QuestionPack.KEY_ENABLED) ? entity.getBoolean(QuestionPack.KEY_ENABLED) : false,
                 DaoUtils.jsonListToQuestionList(entity.getList(QuestionPack.KEY_QUESTIONS))
         );
     }
 
     @SuppressWarnings("unchecked")
-    static BaseEntity.Builder questionPackToEntityBuilder(QuestionPack pack, BaseEntity.Builder builder) {
-        return builder.set(QuestionPack.KEY_NAME, pack.getName())
-                .set(QuestionPack.KEY_QUESTIONS, DaoUtils.questionListTojsonList(pack.getQuestions()));
+    static BaseEntity.Builder questionPackToEntityBuilder(QuestionPack pack,
+                                                          BaseEntity.Builder builder) {
+        return builder
+                .set(QuestionPack.KEY_NAME, pack.getName())
+                .set(QuestionPack.KEY_VIDEO, DaoUtils.getStringValue(pack.getVideo()))
+                .set(QuestionPack.KEY_MESSAGE, DaoUtils.getStringValue(pack.getMessage()))
+                .set(QuestionPack.KEY_ENABLED, pack.isEnabled())
+                .set(QuestionPack.KEY_QUESTIONS,
+                        DaoUtils.questionListTojsonList(pack.getQuestions()));
     }
 
     static List<QuestionPack> entityListToQuestionPackList(QueryResults<Entity> resultList) {
@@ -87,7 +127,7 @@ final class DaoUtils {
     static List<User> jsonListToUserList(List<StringValue> input) {
         List<User> users = new ArrayList<>();
         for (StringValue strJson : input) {
-            User u = User.fromJSON(strJson.get());
+            User u = User.fromJson(strJson.get());
             if (u != null)
                 users.add(u);
         }
@@ -97,7 +137,7 @@ final class DaoUtils {
     static List<StringValue> userListToJsonList(List<User> users) {
         List<StringValue> output = new ArrayList<>();
         for (User u : users)
-            output.add(DaoUtils.getStringValue(u.toJSON()));
+            output.add(DaoUtils.getStringValue(u.toJson()));
         return output;
     }
 
@@ -108,7 +148,7 @@ final class DaoUtils {
     static List<Question> jsonListToQuestionList(List<StringValue> input) {
         List<Question> questions = new ArrayList<>();
         for (StringValue strJson : input) {
-            Question q = Question.fromJSON(strJson.get());
+            Question q = Question.fromJson(strJson.get());
             if (q != null)
                 questions.add(q);
         }
@@ -118,7 +158,7 @@ final class DaoUtils {
     static List<StringValue> questionListTojsonList(List<Question> questions) {
         List<StringValue> output = new ArrayList<>();
         for (Question q : questions)
-            output.add(DaoUtils.getStringValue(q.toJSON()));
+            output.add(DaoUtils.getStringValue(q.toJson()));
         return output;
     }
 
